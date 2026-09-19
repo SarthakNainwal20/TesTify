@@ -1,0 +1,26 @@
+{
+  "name": "Testify CBT — Test Series",
+  "short_name": "Testify CBT",
+  "description": "Computer Based Test platform for JEE Main / Advanced practice",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d47a1",
+  "theme_color": "#0d47a1",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230d47a1'/%3E%3Cpath d='M128 168h256v46H298v182h-84V214h-86z' fill='%23fff'/%3E%3Ccircle cx='400' cy='368' r='44' fill='%23f57c00'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230d47a1'/%3E%3Cpath d='M150 190h212v42H320v150h-64V232h-42z' fill='%23fff'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
