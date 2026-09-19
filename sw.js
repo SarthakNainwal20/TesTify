@@ -1,4 +1,4 @@
-const CACHE='testify-v4';
+const CACHE='testify-v5';
 const SHELL=['./','./index.html','./manifest.json'];
 const CDN=[
   'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs',
