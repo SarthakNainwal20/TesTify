@@ -1519,6 +1519,50 @@ $('tfDl').onclick=async()=>{
   log('✅ Download ho gaya. Ab isi PDF ko normal tarike se test me import karo.');
 };
 </script>
+<!-- ===== Testify credit footer ===== -->
+<style>
+.tf-credit{
+  margin:26px auto calc(84px + var(--safe-b));
+  max-width:560px;text-align:center;padding:16px 18px;
+  border-top:1px solid var(--line);
+}
+.tf-credit .tf-made{
+  font-size:13px;color:var(--muted);letter-spacing:.2px;
+}
+.tf-credit .tf-name{
+  display:inline-block;margin-top:4px;font-size:17px;font-weight:800;letter-spacing:.3px;
+  background:linear-gradient(92deg,#1565c0,#00acc1,#f57c00);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  background-size:200% auto;animation:tfShine 6s linear infinite;
+}
+html[data-theme="dark"] .tf-credit .tf-name{
+  background:linear-gradient(92deg,#7cb2f7,#4dd0e1,#ffb74d);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  background-size:200% auto;
+}
+@keyframes tfShine{to{background-position:200% center}}
+.tf-credit .tf-sub{margin-top:6px;font-size:11.5px;color:var(--muted);opacity:.8}
+.tf-credit .tf-dot{display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--brand);margin:0 7px 2px;vertical-align:middle}
+</style>
+
+<script>
+(function(){
+  function mount(){
+    if(document.querySelector('.tf-credit')) return;
+    var f=document.createElement('footer');
+    f.className='tf-credit';
+    f.innerHTML='<div class="tf-made">Designed &amp; developed by</div>'+
+                '<div class="tf-name">Sarthak Nainwal</div>'+
+                '<div class="tf-sub">Testify CBT <span class="tf-dot"></span> v1.0 '+
+                '<span class="tf-dot"></span> Built for JEE aspirants</div>';
+    (document.querySelector('.app') || document.body).appendChild(f);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',mount);
+  else mount();
+  setTimeout(mount, 1200);
+})();
+</script>
 
 </body>
 </html>
