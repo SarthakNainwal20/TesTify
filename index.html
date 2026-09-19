@@ -1189,5 +1189,336 @@ function printReport(html){
   go('home');
 })();
 </script>
+<!-- ===== TESTIFY UPGRADE PACK v1 ===== -->
+<style id="tf-upgrade">
+:root{
+  --tf-g1:#1565c0; --tf-g2:#00acc1; --tf-g3:#f57c00;
+}
+html[data-theme="dark"]{ --bg:#070d18; --card:#111c30; --line:#1e2c45; }
+
+/* --- body ko depth dena (fika-pan hatao) --- */
+body{
+  background:
+    radial-gradient(1100px 520px at 8% -8%, rgba(21,101,192,.16), transparent 60%),
+    radial-gradient(900px 480px at 100% 0%, rgba(0,172,193,.14), transparent 55%),
+    var(--bg) !important;
+  background-attachment:fixed;
+}
+html[data-theme="dark"] body{
+  background:
+    radial-gradient(1100px 520px at 8% -8%, rgba(91,155,243,.20), transparent 60%),
+    radial-gradient(900px 480px at 100% 0%, rgba(0,172,193,.16), transparent 55%),
+    var(--bg) !important;
+}
+
+/* --- cards me life --- */
+.card,.tile,.panel,.list-item,.test-card,.item{
+  border-radius:16px;
+  transition:transform .18s var(--ease), box-shadow .22s var(--ease), border-color .2s;
+}
+.card:hover,.tile:hover,.test-card:hover,.list-item:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px rgba(16,32,64,.14);
+  border-color:color-mix(in srgb, var(--brand) 35%, var(--line));
+}
+html[data-theme="dark"] .card:hover{ box-shadow:0 10px 34px rgba(0,0,0,.55); }
+
+/* --- headings ko gradient accent --- */
+h1,.page-title,.hero h1,.hero h2{
+  background:linear-gradient(92deg,var(--tf-g1),var(--tf-g2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+html[data-theme="dark"] h1,html[data-theme="dark"] .page-title{
+  background:linear-gradient(92deg,#7cb2f7,#4dd0e1);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+
+/* --- top bar glass --- */
+.topbar,.appbar,header.bar,.header{
+  backdrop-filter:saturate(1.4) blur(14px);
+  -webkit-backdrop-filter:saturate(1.4) blur(14px);
+  background:color-mix(in srgb, var(--card) 78%, transparent) !important;
+  border-bottom:1px solid var(--line);
+}
+
+/* --- stat numbers pop --- */
+.stat b,.stat .num,.kpi b,.big-num{
+  background:linear-gradient(92deg,var(--tf-g1),var(--tf-g3));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  font-variant-numeric:tabular-nums;
+}
+
+/* --- entry animation --- */
+@keyframes tfIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card,.tile,.test-card{animation:tfIn .32s var(--ease) both}
+.card:nth-child(2){animation-delay:.04s}
+.card:nth-child(3){animation-delay:.08s}
+.card:nth-child(4){animation-delay:.12s}
+
+/* --- injected close button for modals --- */
+.tf-x{position:absolute;top:10px;right:10px;z-index:99999;width:34px;height:34px;
+  border-radius:50%;display:grid;place-items:center;font-size:18px;line-height:1;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--text)}
+.tf-x:active{transform:scale(.9)}
+.tf-theme-fab{position:fixed;right:14px;bottom:calc(14px + var(--safe-b));z-index:99998;
+  width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--line);
+  box-shadow:var(--shadow-lg);font-size:20px}
+</style>
+
+<script>
+/* ---------- FIX 2: dark/light toggle jam ---------- */
+(function(){
+  function apply(t){
+    document.documentElement.setAttribute('data-theme', t);
+    try{ localStorage.setItem('theme', t); localStorage.setItem('tf_theme', t); }catch(e){}
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content', t==='dark' ? '#070d18' : '#0d47a1');
+    document.querySelectorAll('.tf-theme-fab').forEach(function(b){
+      b.textContent = t==='dark' ? '☀️' : '🌙';
+    });
+    document.dispatchEvent(new CustomEvent('themechange',{detail:t}));
+  }
+  function cur(){ return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'; }
+  window.tfApplyTheme = apply;
+  window.tfToggleTheme = function(){ apply(cur()==='dark'?'light':'dark'); };
+
+  function isThemeBtn(el){
+    if(!el) return null;
+    var b = el.closest('#themeBtn,#themeToggle,#theme,[data-theme-toggle],[data-act="theme"],.theme-toggle,.theme-btn');
+    if(b) return b;
+    b = el.closest('button,a,label,div[role="button"]');
+    if(!b) return null;
+    var t = ((b.getAttribute('aria-label')||'')+' '+(b.title||'')+' '+(b.dataset.action||'')+' '+b.textContent).toLowerCase();
+    if(/(dark|light)\s*mode|theme|🌙|☀|🌞|🌗/.test(t) && b.textContent.length < 40) return b;
+    return null;
+  }
+  // capture phase: purana buggy handler chalne se pehle hi handle
+  document.addEventListener('click', function(e){
+    var b = isThemeBtn(e.target);
+    if(b){ e.preventDefault(); e.stopImmediatePropagation(); window.tfToggleTheme(); }
+  }, true);
+
+  // boot
+  var saved=null; try{ saved = localStorage.getItem('theme')||localStorage.getItem('tf_theme'); }catch(e){}
+  apply(saved || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+
+  // safety net: agar 1.5s me koi theme button mila hi nahi, floating switch laga do
+  setTimeout(function(){
+    var found=[...document.querySelectorAll('button,a,label')].some(isThemeBtn);
+    if(!found){
+      var f=document.createElement('button');
+      f.className='tf-theme-fab'; f.title='Theme';
+      f.textContent = cur()==='dark'?'☀️':'🌙';
+      f.onclick=function(ev){ ev.stopPropagation(); window.tfToggleTheme(); };
+      document.body.appendChild(f);
+    }
+  },1500);
+})();
+
+/* ---------- FIX 3: modal/edit-profile band nahi hota ---------- */
+(function(){
+  var SEL='.modal,.sheet,.dialog,.drawer,.overlay,.popup,.backdrop,[role="dialog"],[aria-modal="true"]';
+  function visible(el){
+    if(!el||!el.isConnected) return false;
+    var s=getComputedStyle(el);
+    return s.display!=='none' && s.visibility!=='hidden' && +s.opacity>0.05 && el.offsetHeight>40;
+  }
+  function openOnes(){ return [...document.querySelectorAll(SEL)].filter(visible); }
+  function hide(el){
+    el.classList.remove('open','show','active','visible');
+    el.setAttribute('hidden','');
+    el.style.display='none';
+    document.body.style.overflow='';
+    document.documentElement.style.overflow='';
+  }
+  function closeTop(){
+    var o=openOnes(); if(!o.length) return false;
+    var top=o[o.length-1];
+    var btn=top.querySelector('[data-close],.close,.btn-close,#closeBtn,.x,.tf-x');
+    if(btn && !btn.classList.contains('tf-x')){ btn.click(); 
+      setTimeout(function(){ if(visible(top)) hide(top); },220); }
+    else hide(top);
+    return true;
+  }
+  window.tfCloseModal = closeTop;
+
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeTop(); });
+
+  // X button inject karo agar modal me hai hi nahi
+  function decorate(){
+    openOnes().forEach(function(m){
+      if(m.querySelector(':scope > .tf-x')) return;
+      if(getComputedStyle(m).position==='static') m.style.position='relative';
+      var x=document.createElement('button');
+      x.className='tf-x'; x.type='button'; x.innerHTML='✕'; x.title='Close (Esc)';
+      x.addEventListener('click',function(ev){ ev.stopPropagation(); closeTop(); });
+      m.appendChild(x);
+      // backdrop click
+      m.addEventListener('mousedown', function(ev){ if(ev.target===m) closeTop(); });
+    });
+  }
+  new MutationObserver(decorate).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  setInterval(decorate, 900);
+})();
+</script>
+<script type="module">
+/* ===== Testify: Auto question-splitter ===== */
+const PDFJS_URL='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs';
+const JSPDF_URL='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+
+const ui=document.createElement('div');
+ui.innerHTML=`
+<button id="tfSplitFab" style="position:fixed;left:14px;bottom:calc(14px + var(--safe-b));z-index:99998;
+ padding:11px 15px;border-radius:999px;background:linear-gradient(180deg,#1565c0,#0d47a1);color:#fff;
+ font-weight:700;font-size:13px;box-shadow:0 10px 26px rgba(13,71,161,.4);border:0">✂️ Split PDF</button>
+<div id="tfSplitWrap" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(6,12,24,.62);
+ backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px">
+ <div style="position:relative;width:min(560px,100%);max-height:88vh;overflow:auto;background:var(--card);
+  color:var(--text);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow-lg)">
+  <h3 style="margin:0 0 4px">PDF → 1 question per page</h3>
+  <p style="margin:0 0 14px;color:var(--muted);font-size:13px">Normal question paper upload karo. Tool question
+   numbers (1. 2. 3. / Q.1) dhoondh kar har question ko alag page par kaat dega.</p>
+  <input id="tfPdfIn" type="file" accept="application/pdf" style="width:100%;margin-bottom:10px">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;font-size:13px">
+   <label>Start no. <input id="tfStart" type="number" value="1" min="1" style="width:64px;padding:6px;border-radius:8px;border:1px solid var(--line);background:transparent"></label>
+   <label>Quality <select id="tfQ" style="padding:6px;border-radius:8px;border:1px solid var(--line);background:transparent">
+     <option value="1.6">Normal</option><option value="2.2" selected>High</option><option value="3">Max</option></select></label>
+   <label><input id="tfTrim" type="checkbox" checked> Auto-trim</label>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+   <button id="tfGo" class="btn primary">Split now</button>
+   <button id="tfDl" class="btn" disabled>Download split PDF</button>
+   <button id="tfClose" class="btn ghost">Close</button>
+  </div>
+  <div id="tfLog" style="margin-top:12px;font-size:12px;color:var(--muted);white-space:pre-wrap"></div>
+  <div id="tfPrev" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px"></div>
+ </div>
+</div>`;
+document.body.appendChild(ui);
+
+const $=id=>document.getElementById(id);
+const wrap=$('tfSplitWrap'), log=m=>{$('tfLog').textContent=m;};
+$('tfSplitFab').onclick=()=>{wrap.style.display='flex';};
+$('tfClose').onclick=()=>{wrap.style.display='none';};
+wrap.addEventListener('mousedown',e=>{if(e.target===wrap)wrap.style.display='none';});
+
+let shots=[];
+
+function trim(cv){
+  const c=cv.getContext('2d',{willReadFrequently:true});
+  const d=c.getImageData(0,0,cv.width,cv.height).data;
+  let top=0,bot=cv.height-1,left=0,right=cv.width-1;
+  const rowBlank=y=>{for(let x=0;x<cv.width;x+=3){const i=(y*cv.width+x)*4;if(d[i]<245||d[i+1]<245||d[i+2]<245)return false;}return true;};
+  const colBlank=x=>{for(let y=0;y<cv.height;y+=3){const i=(y*cv.width+x)*4;if(d[i]<245||d[i+1]<245||d[i+2]<245)return false;}return true;};
+  while(top<bot&&rowBlank(top))top++;
+  while(bot>top&&rowBlank(bot))bot--;
+  while(left<right&&colBlank(left))left++;
+  while(right>left&&colBlank(right))right--;
+  const pad=18, x=Math.max(0,left-pad), y=Math.max(0,top-pad);
+  const w=Math.min(cv.width-x,right-left+pad*2), h=Math.min(cv.height-y,bot-top+pad*2);
+  if(w<20||h<20) return cv;
+  const out=document.createElement('canvas'); out.width=w; out.height=h;
+  const oc=out.getContext('2d'); oc.fillStyle='#fff'; oc.fillRect(0,0,w,h);
+  oc.drawImage(cv,x,y,w,h,0,0,w,h);
+  return out;
+}
+
+function stitch(parts){
+  const w=Math.max(...parts.map(p=>p.cv.width));
+  const h=parts.reduce((s,p)=>s+p.h,0)+24;
+  const out=document.createElement('canvas'); out.width=w; out.height=h;
+  const c=out.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,w,h);
+  let y=12;
+  parts.forEach(p=>{ c.drawImage(p.cv,0,p.y,p.cv.width,p.h,0,y,p.cv.width,p.h); y+=p.h; });
+  return out;
+}
+
+$('tfGo').onclick=async()=>{
+  const f=$('tfPdfIn').files[0];
+  if(!f){log('Pehle PDF choose karo.');return;}
+  log('Loading engine…');
+  const pdfjs=await import(PDFJS_URL);
+  pdfjs.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs';
+  const buf=await f.arrayBuffer();
+  const pdf=await pdfjs.getDocument({data:buf}).promise;
+  const scale=parseFloat($('tfQ').value), doTrim=$('tfTrim').checked;
+  let expect=parseInt($('tfStart').value||'1',10);
+  shots=[]; let cur=[]; let started=false;
+
+  const flush=()=>{
+    if(!cur.length) return;
+    let cv=stitch(cur);
+    if(doTrim) cv=trim(cv);
+    if(cv.height>60) shots.push(cv.toDataURL('image/jpeg',0.86));
+    cur=[];
+  };
+
+  for(let p=1;p<=pdf.numPages;p++){
+    log(`Page ${p}/${pdf.numPages} — questions found: ${shots.length}`);
+    const page=await pdf.getPage(p);
+    const vp=page.getViewport({scale});
+    const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+    const ctx=cv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+
+    const tc=await page.getTextContent();
+    const marks=[];
+    tc.items.forEach(it=>{
+      const s=(it.str||'').trim();
+      const m=s.match(/^(?:Q\s*\.?\s*|Question\s*)?(\d{1,3})\s*[.)\]]/i);
+      if(!m) return;
+      const n=parseInt(m[1],10);
+      const tr=pdfjs.Util.transform(vp.transform,it.transform);
+      const x=tr[4], y=tr[5]-Math.abs(tr[3]);
+      if(x > vp.width*0.45) return;            // options/right column ignore
+      if(n!==expect) return;                   // sirf sequence me agla number
+      marks.push({y:Math.max(0,y-10),n}); expect++;
+    });
+    marks.sort((a,b)=>a.y-b.y);
+
+    if(!marks.length){ cur.push({cv,y:0,h:cv.height}); continue; }
+    if(marks[0].y>30){
+      if(started) cur.push({cv,y:0,h:marks[0].y});
+    }
+    flush(); started=true;
+    marks.forEach((m,i)=>{
+      const end = i<marks.length-1 ? marks[i+1].y : cv.height;
+      cur=[{cv,y:m.y,h:end-m.y}];
+      if(i<marks.length-1) flush();
+    });
+  }
+  flush();
+
+  if(!shots.length){ log('❌ Koi question number detect nahi hua. Ye scanned PDF ho sakta hai (text layer nahi hai).'); return; }
+  log(`✅ ${shots.length} questions mil gaye. Ab "Download split PDF" dabao.`);
+  $('tfPrev').innerHTML=shots.slice(0,24).map((s,i)=>
+    `<div style="border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff">
+      <img src="${s}" style="width:100%;display:block">
+      <div style="font-size:10px;text-align:center;color:#555">Q${i+1}</div></div>`).join('');
+  $('tfDl').disabled=false;
+  window.tfSplitQuestions=shots;   // baaki app isse use kar sakta hai
+};
+
+$('tfDl').onclick=async()=>{
+  if(!shots.length) return;
+  if(!window.jspdf) await loadScript(JSPDF_URL);
+  const {jsPDF}=window.jspdf;
+  let doc=null;
+  for(let i=0;i<shots.length;i++){
+    const img=new Image(); img.src=shots[i];
+    await img.decode();
+    const W=img.naturalWidth, H=img.naturalHeight;
+    if(!doc) doc=new jsPDF({unit:'px',format:[W,H],orientation:W>H?'l':'p'});
+    else doc.addPage([W,H],W>H?'l':'p');
+    doc.addImage(shots[i],'JPEG',0,0,W,H);
+    log(`PDF banate hue… ${i+1}/${shots.length}`);
+  }
+  doc.save('split-one-question-per-page.pdf');
+  log('✅ Download ho gaya. Ab isi PDF ko normal tarike se test me import karo.');
+};
+</script>
+
 </body>
 </html>
