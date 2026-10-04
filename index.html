@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0d47a1">
+<meta name="theme-color" content="#0d1730">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Testify CBT — Test Series</title>
@@ -184,15 +184,83 @@ th{color:var(--muted);font-weight:650;font-size:11.5px;text-transform:uppercase;
 }
 .scrim{position:fixed;inset:0;background:rgba(6,12,24,.45);opacity:0;pointer-events:none;transition:opacity .28s;z-index:55}
 .scrim.on{opacity:1;pointer-events:auto}
-.calc{position:fixed;right:18px;bottom:18px;width:260px;background:#f7f7f7;border:1px solid #9b9b9b;border-radius:8px;box-shadow:var(--shadow-lg);z-index:75;display:none;color:#000}
-.calc.on{display:block}
-.calc .hd{background:#1f6fb2;color:#fff;font-size:12px;font-weight:700;padding:6px 9px;border-radius:7px 7px 0 0;display:flex;cursor:move}
-.calc input{width:100%;border:1px solid #b5b5b5;padding:8px;font-size:16px;text-align:right;border-radius:0;background:#fff}
-.calc .g{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px}
-.calc .g button{padding:9px 0;border:1px solid #bdbdbd;background:#fff;border-radius:4px;font-size:12.5px;font-weight:600}
-.calc .g button:active{background:#e3eefa}
 @media print{body{background:#fff}.noprint{display:none!important}}
 </style>
+<script>
+/* login gate: hide the app until a saved session is found (or the user logs in) */
+(function(){try{
+  var has=Object.keys(localStorage).some(function(x){return /^sb-.+-auth-token$/.test(x)})||sessionStorage.getItem('tf_offline')==='1';
+  if(!has){
+    document.documentElement.classList.add('tf-lock');
+    setTimeout(function(){
+      if(window.__tfGate||!document.documentElement.classList.contains('tf-lock'))return;
+      var d=document.createElement('div');d.className='tf-gate';
+      d.innerHTML='<div class="gx-form" style="margin:auto;text-align:center"><h2 class="gx-h">Sign-in is taking longer than usual</h2><p class="gx-p">We could not load the sign-in service. Check your connection, or continue and sign in later.</p><button class="gx-btn" onclick="location.reload()">Try again</button><button class="gx-link" style="margin-top:10px" onclick="sessionStorage.setItem(\'tf_offline\',\'1\');document.documentElement.classList.remove(\'tf-lock\');this.closest(\'.tf-gate\').remove()">Continue without signing in</button></div>';
+      document.body.appendChild(d);
+    },12000);
+  }
+}catch(e){}})();
+</script>
+<style>
+html.tf-lock body>*:not(.tf-gate){visibility:hidden}
+.tf-gate{position:fixed;inset:0;z-index:100010;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);background:var(--card);color:var(--text);overflow:auto;font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.gx-side{position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:56px 60px;color:#efe6d0;
+  background:radial-gradient(900px 520px at 85% -10%,rgba(220,194,138,.20),transparent 60%),radial-gradient(700px 500px at -10% 110%,rgba(44,66,114,.55),transparent 60%),linear-gradient(160deg,#0b1327,#15233f 60%,#0e1932)}
+.gx-side::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:linear-gradient(rgba(220,194,138,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(220,194,138,.05) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(circle at 30% 40%,#000,transparent 75%);mask-image:radial-gradient(circle at 30% 40%,#000,transparent 75%)}
+.gx-side>*{position:relative;z-index:1}
+.gx-brand{display:flex;align-items:center;gap:14px}
+.gx-mark{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:700 21px 'Playfair Display',Georgia,serif;color:#1a1405;background:linear-gradient(135deg,#f0dfb4,#b8934f);box-shadow:0 8px 22px rgba(184,147,79,.35)}
+.gx-name{font:600 21px 'Playfair Display',Georgia,serif;letter-spacing:.01em}
+.gx-hero h1{margin:0 0 16px;font:700 42px/1.12 'Playfair Display',Georgia,serif;letter-spacing:-.01em;color:#fbf3df}
+.gx-hero h1 em{font-style:normal;color:#dcc28a}
+.gx-hero p{margin:0 0 30px;max-width:460px;font-size:15.5px;line-height:1.65;color:rgba(239,230,208,.78)}
+.gx-feat{list-style:none;margin:0;padding:0;display:grid;gap:15px}
+.gx-feat li{display:flex;gap:14px;align-items:flex-start;font-size:14.5px;color:rgba(239,230,208,.9)}
+.gx-feat i{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid rgba(220,194,138,.55);display:grid;place-items:center;margin-top:1px}
+.gx-feat i::after{content:"";width:6px;height:10px;border:solid #dcc28a;border-width:0 1.6px 1.6px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.gx-foot{font-size:12.5px;color:rgba(239,230,208,.55)}
+.gx-main{display:flex;align-items:center;justify-content:center;padding:40px 28px;min-height:100%}
+.gx-form{width:min(400px,100%)}
+.gx-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.gx-h{margin:8px 0 8px;font:700 29px/1.2 'Playfair Display',Georgia,serif;letter-spacing:-.01em;color:var(--text)}
+.gx-p{margin:0 0 26px;font-size:14.5px;line-height:1.6;color:var(--muted)}
+.gx-lab{display:block;margin:0 0 7px;font-size:12.5px;font-weight:600;color:var(--text)}
+.gx-in{width:100%;height:50px;padding:0 16px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--text);font:inherit;font-size:15px;outline:none;transition:border-color .15s,box-shadow .15s}
+.gx-in:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(184,147,79,.18)}
+.gx-field{margin-bottom:16px;position:relative}
+.gx-eye{position:absolute;right:6px;bottom:6px;height:38px;padding:0 12px;border-radius:10px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.gx-btn{width:100%;height:52px;border-radius:14px;font:600 15px Inter,sans-serif;letter-spacing:.01em;color:#fbf3df;background:linear-gradient(135deg,#14213d,#2c4272);border:1px solid rgba(220,194,138,.5);box-shadow:0 12px 26px rgba(20,33,61,.28);cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .15s}
+.gx-btn:hover{transform:translateY(-1px);box-shadow:0 16px 32px rgba(20,33,61,.34)}
+.gx-btn:disabled{opacity:.6;cursor:default;transform:none}
+html[data-theme="dark"] .gx-btn{color:#1a1405;background:linear-gradient(135deg,#f0dfb4,#c9a45e);border-color:transparent}
+.gx-sep{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:12px}
+.gx-sep::before,.gx-sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.gx-ghost{width:100%;height:50px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--text);font:600 14.5px Inter,sans-serif;cursor:pointer;transition:border-color .15s,background .15s}
+.gx-ghost:hover{border-color:var(--gold);background:var(--brand-soft)}
+.gx-link{display:inline-block;background:none;border:0;padding:6px 2px;color:var(--brand);font:600 13.5px Inter,sans-serif;cursor:pointer}
+html[data-theme="light"] .gx-link,html:not([data-theme]) .gx-link{color:#1c2b4a}
+.gx-link:disabled{color:var(--muted);cursor:default}
+.gx-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.gx-otp{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:18px}
+.gx-otp input{width:100%;height:58px;text-align:center;font:700 23px Inter,sans-serif;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+.gx-otp input:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(184,147,79,.18)}
+.gx-alert{display:none;margin:0 0 18px;padding:12px 14px;border-radius:12px;font-size:13.5px;line-height:1.5;border:1px solid var(--line);background:var(--brand-soft);color:var(--text)}
+.gx-alert.show{display:block}
+.gx-alert.err{border-color:rgba(192,69,90,.45);background:rgba(192,69,90,.08);border-left:3px solid var(--red)}
+.gx-alert.ok{border-color:rgba(46,143,102,.45);background:rgba(46,143,102,.08);border-left:3px solid var(--green)}
+.gx-alert .gx-act{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.gx-sec{margin-top:26px;display:flex;align-items:center;gap:8px;justify-content:center;font-size:12px;color:var(--muted)}
+.gx-sec svg{width:14px;height:14px;flex:none}
+.tf-gate [hidden]{display:none!important}
+@media(max-width:860px){
+  .tf-gate{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .gx-side{padding:22px 22px 24px;gap:0}
+  .gx-hero,.gx-foot{display:none}
+  .gx-main{align-items:flex-start;padding:28px 22px 40px}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="app" class="app"></div>
@@ -256,8 +324,11 @@ async function imgUrl(testId,qid){const k=imgKey(testId,qid);
 /* ============ PDF ============ */
 let pdfjs;
 async function getPdfjs(){if(!pdfjs){
-  pdfjs=await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs');
-  pdfjs.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs';}
+  const M=[['https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs','https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs'],
+    ['https://unpkg.com/pdfjs-dist@4.7.76/build/pdf.min.mjs','https://unpkg.com/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs'],
+    ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.mjs','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.worker.min.mjs']];
+  let err;for(const[lib,wk]of M){try{pdfjs=await import(lib);pdfjs.GlobalWorkerOptions.workerSrc=wk;break;}catch(e){err=e;pdfjs=null;}}
+  if(!pdfjs)throw err||new Error('PDF library could not be loaded');}
   return pdfjs;}
 function trim(c){
   const ctx=c.getContext('2d'),{width:w,height:h}=c;let d;
@@ -292,62 +363,330 @@ async function splitBlobAt(blob,ratio){
     return new Promise(r=>trim(c).toBlob(r,'image/jpeg',.86));};
   return[await mk(0,cut),await mk(cut,bmp.height-cut)];}
 
+/* ============ smart question splitter (layout-aware) ============ */
+const Q_RE=/^(?:(?:Q(?:uestion|ues)?|Que)\s*\.?\s*(\d{1,3})\b|(\d{1,3})\s*[.):\]])/i;
+const HEAD_RE=/^(?:section\s*[-–:.]?\s*[a-z0-9]{1,3}|part\s*[-–:.]?\s*(?:[a-d]|i{1,3}|iv|[1-4])|physics|chemistry|mathematics|maths)\s*(?:[-–:(].{0,60})?$/i;
+const END_RE=/^(?:answer\s*keys?|solutions?|hints?\s*(?:&|and)\s*solutions?)\s*[:\-–]?$/i;
+function toLines(els){
+  els.sort((a,b)=>(a.y0+a.y1)/2-(b.y0+b.y1)/2||a.x0-b.x0);
+  const L=[];
+  for(const e of els){const cy=(e.y0+e.y1)/2,h=e.y1-e.y0,l=L[L.length-1];
+    if(l&&Math.abs(cy-l.cy)<Math.max(4,.55*Math.min(h,l.h))){l.els.push(e);l.cy=(l.cy*(l.els.length-1)+cy)/l.els.length;}
+    else L.push({els:[e],cy,h});}
+  return L.map(l=>{l.els.sort((a,b)=>a.x0-b.x0);
+    return{text:l.els.map(e=>e.s).join(' ').replace(/\s+/g,' ').trim(),x0:l.els[0].x0,
+      x1:Math.max(...l.els.map(e=>e.x1)),y0:Math.min(...l.els.map(e=>e.y0)),y1:Math.max(...l.els.map(e=>e.y1))};});}
+function findGutter(els,W){            // two-column page? returns x of the gap or null
+  if(els.length<30)return null;
+  const B=60,lo=Math.floor(B*.35),hi=Math.floor(B*.65),cov=new Array(B).fill(0),lim=Math.max(1,els.length*.03);
+  els.forEach(e=>{for(let i=Math.max(0,Math.floor(e.x0/W*B));i<=Math.min(B-1,Math.floor(e.x1/W*B));i++)cov[i]++;});
+  let best=null;
+  for(let i=lo;i<=hi;i++)if(cov[i]<=lim){let j=i;while(j+1<=hi&&cov[j+1]<=lim)j++;if(!best||j-i>best.j-best.i)best={i,j};i=j;}
+  if(!best)return null;
+  const gx=(best.i+best.j+1)/2/B*W;
+  return els.filter(e=>e.x1<=gx+2).length>=els.length*.25&&els.filter(e=>e.x0>=gx-2).length>=els.length*.25?gx:null;}
+function cropC(cv,x,y,w,h){x=Math.max(0,Math.round(x));y=Math.max(0,Math.round(y));
+  w=Math.min(cv.width-x,Math.round(w));h=Math.min(cv.height-y,Math.round(h));if(w<4||h<4)return null;
+  const o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
+  g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(cv,x,y,w,h,0,0,w,h);return o;}
+function hasInk(cv,x,y,w,h){const c=cropC(cv,x,y,w,h);if(!c)return false;
+  const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;
+  for(let i=0;i<d.length;i+=24)if(d[i]<225&&++n>40)return true;return false;}
+function stitchC(parts){if(parts.length===1)return parts[0];
+  const w=Math.max(...parts.map(p=>p.width)),h=parts.reduce((s,p)=>s+p.height+8,0);
+  const o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
+  g.fillStyle='#fff';g.fillRect(0,0,w,h);let y=0;parts.forEach(p=>{g.drawImage(p,0,y);y+=p.height+8;});return o;}
+async function pdfToQuestionBlobs(file,onP){
+  const lib=await getPdfjs(),doc=await lib.getDocument({data:await file.arrayBuffer()}).promise,N=doc.numPages,pages=[];
+  for(let p=1;p<=N;p++){                                   // pass 1: read the text layer
+    const page=await doc.getPage(p),base=page.getViewport({scale:1}),sc=Math.min(2.6,Math.max(1.4,1500/base.width)),vp=page.getViewport({scale:sc});
+    const tc=await page.getTextContent(),els=[];
+    for(const it of tc.items){const s=(it.str||'').trim();if(!s)continue;
+      const tr=lib.Util.transform(vp.transform,it.transform),h=Math.hypot(tr[2],tr[3])||10;
+      els.push({s,x0:tr[4],x1:tr[4]+(it.width||0)*sc,y0:tr[5]-h*.95,y1:tr[5]+h*.25});}
+    pages.push({page,vp,els});onP?.(p,N,'Reading page');await new Promise(r=>setTimeout(r));}
+  const norm=s=>s.toLowerCase().replace(/\d+/g,'#').replace(/\s+/g,' '),band=(e,H)=>Math.round((e.y0+e.y1)/2/H*40),cnt=new Map();
+  pages.forEach(P=>{const seen=new Set();P.els.forEach(e=>{const b=band(e,P.vp.height);if(b>5&&b<35)return;
+    const k=norm(e.s)+'@'+b;if(!seen.has(k)){seen.add(k);cnt.set(k,(cnt.get(k)||0)+1);}});});
+  const need=Math.max(3,Math.ceil(N*.4)),isHF=(e,H)=>{const b=band(e,H);return(b<=5||b>=35)&&(cnt.get(norm(e.s)+'@'+b)||0)>=need;};
+  const out=[];let cur=null,expect=1,sectionSeen=false,stop=false,jumps=0,worker=null;
+  const close=async()=>{if(!cur)return;const cv=trim(stitchC(cur));cur=null;
+    if(cv&&cv.height>50)out.push(await new Promise(r=>cv.toBlob(r,'image/jpeg',.86)));};
+  for(let p=0;p<N&&!stop;p++){                              // pass 2: cut questions
+    const P=pages[p],{vp}=P,W=vp.width,H=vp.height;onP?.(p+1,N,'Splitting page');
+    const cv=document.createElement('canvas');cv.width=Math.ceil(W);cv.height=Math.ceil(H);
+    const ctx=cv.getContext('2d',{alpha:false,willReadFrequently:true});ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+    await P.page.render({canvasContext:ctx,viewport:vp}).promise;
+    let els,top=0,bot=H;
+    if(P.els.length<12){                                    // scanned page -> OCR
+      els=[];try{const T=await getTesseract();worker=worker||await T.createWorker('eng');
+        const{data}=await worker.recognize(cv);
+        const ws=data.words||(data.lines||[]).flatMap(l=>l.words||[])||[];
+        const all=ws.length?ws:(data.blocks||[]).flatMap(b=>(b.paragraphs||[]).flatMap(q=>(q.lines||[]).flatMap(l=>l.words||[])));
+        els=all.filter(w=>w.text&&w.text.trim()&&w.confidence>30).map(w=>({s:w.text.trim(),x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0,y1:w.bbox.y1}));}catch(e){console.warn('OCR failed',e);}
+    }else{
+      els=P.els.filter(e=>!isHF(e,H));
+      P.els.filter(e=>isHF(e,H)).forEach(e=>{if(band(e,H)<=5)top=Math.max(top,e.y1);else bot=Math.min(bot,e.y0);});}
+    const gx=findGutter(els,W),strips=gx?[[0,gx],[gx,W]]:[[0,W]];
+    for(const[sx0,sx1]of strips){
+      const se=gx?els.filter(e=>(e.x0+e.x1)/2>=sx0&&(e.x0+e.x1)/2<sx1):els;
+      const lines=toLines(se);if(!lines.length&&!cur)continue;
+      const xs=lines.map(l=>l.x0).sort((a,b)=>a-b),lm=xs.length?xs[Math.floor(xs.length*.1)]:0,tol=Math.max(24,.06*(sx1-sx0));
+      const ev=[];
+      for(const l of lines){
+        if(END_RE.test(l.text)){ev.push({k:'end',y:l.y0});break;}
+        const m=l.text.match(Q_RE),n=m&&l.x0<=lm+tol?+(m[1]||m[2]):0;
+        if(n&&(n===expect||(n===1&&sectionSeen)||(n>expect&&n<=expect+2))){
+          if(n>expect&&!(n===1&&sectionSeen))jumps++;
+          ev.push({k:'q',y:l.y0,n});expect=n+1;sectionSeen=false;}
+        else if(!m&&l.x0<=lm+tol&&HEAD_RE.test(l.text)){ev.push({k:'head',y:l.y0});sectionSeen=true;}}
+      const firstY=ev.length?ev[0].y-4:bot;
+      if(cur){                                              // question carried over from previous column/page
+        if(lines.some(l=>l.y0<firstY-1)||hasInk(cv,sx0,top,sx1-sx0,firstY-top)){const c=cropC(cv,sx0,top,sx1-sx0,firstY-top);if(c)cur.push(c);}
+        else await close();}
+      for(let j=0;j<ev.length;j++){
+        const e=ev[j];
+        if(e.k==='end'){await close();stop=true;break;}
+        await close();
+        if(e.k==='q'){const nx=ev[j+1],y1=nx?nx.y-(nx.k==='q'?6:3):bot,c=cropC(cv,sx0,Math.max(top,e.y-6),sx1-sx0,y1-Math.max(top,e.y-6));
+          cur=c?[c]:[];}}
+      if(stop)break;}
+    await new Promise(r=>setTimeout(r));}
+  await close();if(worker)try{await worker.terminate();}catch{}
+  if(out.length<2)return null;out.jumps=jumps;return out;}
+
+/* ============ AI answer solver (optional - your own API key) ============ */
+const aiCfg=()=>{try{return JSON.parse(localStorage.tf_ai||'{}')}catch{return{}}};
+const b64raw=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(b);});
+function aiSettings(){return new Promise(res=>{const c=aiCfg(),m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="box" style="max-width:420px;padding:18px;display:grid;gap:8px"><h2 style="margin:0">AI answer solver</h2>
+    <p class="hint" style="margin:0">Uses your own API key. It stays on this device only (not included in cloud backup). Gemini has a free tier at aistudio.google.com/apikey.</p>
+    <label class="hint">Provider</label><select id="aiP"><option value="gemini">Google Gemini</option><option value="claude">Anthropic Claude</option></select>
+    <label class="hint">API key</label><input id="aiK" type="password" placeholder="paste your key">
+    <label class="hint">Model (optional)</label><input id="aiM" placeholder="gemini-2.5-flash  /  claude-sonnet-5-5">
+    <div class="row" style="margin-top:6px"><div class="spacer"></div><button class="btn" id="aiNo">Cancel</button><button class="btn primary" id="aiOk">Save</button></div></div>`;
+  document.body.appendChild(m);$('#aiP',m).value=c.provider||'gemini';$('#aiK',m).value=c.key||'';$('#aiM',m).value=c.model||'';
+  $('#aiNo',m).onclick=()=>{m.remove();res(null);};
+  $('#aiOk',m).onclick=()=>{const v={provider:$('#aiP',m).value,key:$('#aiK',m).value.trim(),model:$('#aiM',m).value.trim()};
+    if(!v.key)return toast('Please paste your API key');localStorage.tf_ai=JSON.stringify(v);m.remove();res(v);};});}
+const aiPrompt=q=>`You are a JEE (Main/Advanced) expert. The image is ONE question${q.subject?' from '+q.subject:''}. It is ${q.type==='mcq'
+  ?'a single-correct MCQ with options A,B,C,D (if options are numbered 1-4 map 1->A, 2->B, 3->C, 4->D)':'a numerical-value question (the answer is a number)'}.
+Solve it carefully, then reply with ONLY this JSON: {"answer":"${q.type==='mcq'?'A, B, C or D':'number only, no units'}","remark":"2-3 sentence explanation of the key steps","confidence":0.0-1.0}. If the image is unreadable reply {"answer":"","remark":"unreadable","confidence":0}.`;
+async function callAI(c,blob,q){
+  const data=await b64raw(blob);let txt='';
+  for(let a=0;a<4;a++){
+    const r=c.provider==='claude'
+      ?await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:c.model||'claude-sonnet-5-5',max_tokens:1500,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data}},{type:'text',text:aiPrompt(q)}]}]})})
+      :await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${c.model||'gemini-2.5-flash'}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':c.key},
+        body:JSON.stringify({contents:[{parts:[{text:aiPrompt(q)},{inline_data:{mime_type:'image/jpeg',data}}]}],generationConfig:{responseMimeType:'application/json',temperature:0}})});
+    if(r.status===429||r.status===503||r.status===529){await new Promise(z=>setTimeout(z,6000*(a+1)));continue;}
+    const j=await r.json();if(!r.ok)throw new Error((j.error&&(j.error.message||j.error))||('HTTP '+r.status));
+    txt=c.provider==='claude'?(j.content||[]).map(x=>x.text||'').join(''):(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(x=>x.text||'').join('');break;}
+  const m=txt.match(/\{[\s\S]*\}/);if(!m)throw new Error('AI reply not understood');
+  const o=JSON.parse(m[0]);let ans=String(o.answer??'').trim();
+  if(q.type==='mcq'){ans=ans.toUpperCase().replace(/^\(?([A-D1-4]).*$/,'$1');ans=({1:'A',2:'B',3:'C',4:'D'})[ans]||ans;if(!/^[A-D]$/.test(ans))ans='';}
+  else{ans=ans.replace(/[^\d.\-eE+]/g,'');if(isNaN(parseFloat(ans)))ans='';}
+  return{answer:ans,remark:String(o.remark||'').slice(0,600),confidence:Math.max(0,Math.min(1,+o.confidence||0))};}
+async function aiSolve(qs,getBlob,onP){
+  let c=aiCfg();if(!c.key){c=await aiSettings();if(!c)return null;}
+  const todo=qs.filter(q=>!q.answer);let i=0,done=0,fail=0,err=null;
+  async function w(){while(i<todo.length){const q=todo[i++];
+    try{const b=await getBlob(q);if(!b){fail++;continue;}
+      const r=await callAI(c,b,q);if(r.answer){q.answer=r.answer;q.remark=r.remark;q.ai=true;q.conf=r.confidence;done++;}else fail++;}
+    catch(e){fail++;err=e;if(/api key|permission|unauthor|invalid/i.test(e.message))i=todo.length;}
+    onP?.(done+fail,todo.length);}}
+  await Promise.all([w(),w()]);return{done,fail,total:todo.length,err};}
+
 /* ============ OCR key ============ */
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
-async function getTesseract(){if(!window.Tesseract)await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');return window.Tesseract;}
-async function prepForOcr(blob){
-  const bmp=await createImageBitmap(blob),sc=Math.min(3,Math.max(1,1700/bmp.width));
-  const c=document.createElement('canvas');c.width=bmp.width*sc;c.height=bmp.height*sc;
-  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bmp,0,0,c.width,c.height);
-  const d=x.getImageData(0,0,c.width,c.height),p=d.data;
-  for(let i=0;i<p.length;i+=4){const g=.299*p[i]+.587*p[i+1]+.114*p[i+2];const v=g>176?255:g<110?0:g;p[i]=p[i+1]=p[i+2]=v;}
-  x.putImageData(d,0,0);return new Promise(r=>c.toBlob(r,'image/png'));}
-function parseKeyText(txt){
-  const out=new Map();
-  const clean=txt.replace(/[|_]/g,' ').replace(/[\u2013\u2014]/g,'-');
-  const re=/(?:^|[\s(])[QO0]\s*\.?\s*(\d{1,3})\s*[).:\-]?\s+?[\(\[]?\s*([A-Da-d]|\d{1,4}(?:\.\d{1,3})?)\s*[\)\]]?(?=[\s.,)]|$)/g;
-  let m;while((m=re.exec(clean))){const n=+m[1];if(n<1||n>500)continue;
-    let v=m[2];if(/^[a-d]$/.test(v))v=v.toUpperCase();if(!out.has(n))out.set(n,v);}
-  return out;}
+async function getTesseract(){if(!window.Tesseract){let err;
+  for(const u of ['https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js','https://unpkg.com/tesseract.js@5/dist/tesseract.min.js','https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js']){
+    try{await loadScript(u);if(window.Tesseract)break;}catch(e){err=e;}}
+  if(!window.Tesseract)throw err||new Error('OCR library could not be loaded');}
+  return window.Tesseract;}
+/* ============ answer-key reader: PDF text layer + multi-pass OCR + optional AI vision ============ */
+const KEY_TOK=/(?<!\d)(?<!\d\.)(?:(?<=^|[\s:=(\[])-)?\d+(?:\.\d+)*|(?<![A-Za-z])([A-D])\1?(?![A-Za-z])/gi;
+function keyTokens(l,expand){
+  const a=[],add=(t,x0,x1)=>{let m;KEY_TOK.lastIndex=0;
+    while((m=KEY_TOK.exec(t)))a.push({k:/\d/.test(m[0])?'N':'L',v:/\d/.test(m[0])?m[0]:m[0][0],x:x0+(m.index/Math.max(1,t.length))*(x1-x0)});};
+  if(expand&&l.els){for(const e of l.els){
+      if(/^[A-Da-d]{2,8}$/.test(e.s)){const n=e.s.length;[...e.s].forEach((c,i)=>a.push({k:'L',v:c,x:e.x0+(i+.5)/n*(e.x1-e.x0)}));}
+      else add(e.s,e.x0,e.x1);}}
+  else add(l.text,l.x0,l.x1||l.x0+1);
+  return a;}
+function keyFromLines(lines,out,w){
+  const vote=(q,v,x=w)=>{q=+q;if(!(q>=1&&q<=500))return false;v=String(v).trim().toUpperCase();
+    if(/^-?\d/.test(v)){if(/\..*\./.test(v))return false;const n=parseFloat(v);if(!isFinite(n))return false;v=String(n);}else if(!/^[A-D]$/.test(v))return false;
+    const m=out.get(q)||new Map();m.set(v,(m.get(v)||0)+x);out.set(q,m);return true;};
+  const isInt=t=>t.k==='N'&&/^\d{1,3}$/.test(t.v),asc=a=>a.length>=3&&a.every((t,i)=>!i||+t.v===+a[i-1].v+1),inc=a=>a.every((t,i)=>!i||+t.v>+a[i-1].v);
+  const unglue=T=>T.flatMap(x=>{const m=x.k==='N'&&x.v.match(/^(\d{1,3})\.(\d+(?:\.\d+)?)$/);return m?[{k:'N',v:m[1],x:x.x},{k:'N',v:m[2],x:x.x+1}]:[x];});
+  const pairRow=(U,x=w)=>{const ev=U.filter((_,n)=>n%2===0);
+    if(U.length>=2&&U.length%2===0&&ev.every(isInt)&&(U.length===2||inc(ev))){for(let n=0;n<U.length;n+=2){if(vote(U[n].v,U[n+1].v,x)){seq.push({q:+U[n].v});lastQ=+U[n].v;}}return true;}return false;};
+  const stepFrac=a=>a.length<2?0:a.filter((t,i)=>i&&+t.v===+a[i-1].v+1).length/(a.length-1);
+  const repairHdr=T=>{const o=[];for(let ti=0;ti<T.length;ti++){const t=T[ti],e=o.length?+o[o.length-1].v+1:null;
+      if(e===null&&t.v.length>=2&&T[1]){let sp=false;for(let j=1;j<t.v.length&&!sp;j++){const x=t.v.slice(0,j),y=t.v.slice(j);
+          if(+y===+x+1&&+T[1].v===+y+1){o.push({k:'N',v:x,x:t.x-8},{k:'N',v:y,x:t.x+8});sp=true;}}
+        if(sp)continue;}
+      if(e===null||+t.v===e)o.push(t);else if(t.v.length>=2&&t.v===String(e)+String(e+1)){o.push({k:'N',v:String(e),x:t.x-8},{k:'N',v:String(e+1),x:t.x+8});}else o.push(t);}
+    return asc(o)?o:null;};
+  const toks=lines.map(l=>keyTokens(l)),seq=[],sN=[],sL=[];let lastQ=0;
+  for(let i=0;i<lines.length;i++){
+    const T=toks[i];if(!T.length)continue;
+    const nums=T.filter(t=>t.k==='N'),lets=T.filter(t=>t.k==='L');
+    const HD=!lets.length&&T.length>=4&&T.every(isInt)?(asc(T)?T:repairHdr(T)):null;
+    if(HD){                                                          // header row of Q numbers -> answers on the next row
+      const T=HD;let j=i+1;while(j<lines.length&&!keyTokens(lines[j],true).length)j++;
+      const A=j<lines.length?keyTokens(lines[j],true):[];
+      if(A.length&&!(A.every(isInt)&&asc(A))&&A.length>=T.length*.5){
+        const sp=T.length>1?(T[T.length-1].x-T[0].x)/(T.length-1):80;
+        if(A.length===T.length)T.forEach((t,n)=>vote(t.v,A[n].v));
+        else{const used=new Set();T.forEach(t=>{let b=-1,bd=1e9;A.forEach((a,k)=>{const d=Math.abs(a.x-t.x);if(!used.has(k)&&d<bd){bd=d;b=k;}});if(b>=0&&bd<sp*.7){used.add(b);vote(t.v,A[b].v,w*.5);}});}
+        i=j;continue;}}
+    if(lets.length>=3&&lets.length===nums.length&&asc(nums)&&nums[nums.length-1].x<lets[0].x){nums.forEach((t,n)=>vote(t.v,lets[n].v));continue;}
+    if(!lets.length){
+      if(T.length===1){const m=T[0].v.match(/^(\d{1,3})\.(\d+(?:\.\d+)?)$/);
+        if(m&&(+m[1]===lastQ+1)){vote(m[1],m[2],w*.7);seq.push({q:+m[1]});lastQ=+m[1];}
+        else(isInt(T[0])?sN:sL).push(T[0]);continue;}
+      if(T.length>=6&&T.every(isInt)&&stepFrac(T)>=.5)continue;        // looks like a header row we could not repair: never pair it
+      if(!pairRow(T))pairRow(unglue(T),w*.8);
+      continue;}
+    if(T.length===1){sL.push(T[0]);seq.push({o:T[0].v});continue;}
+    let n=0;while(n<T.length){const a=T[n],b=T[n+1],c=T[n+2];
+      if(isInt(a)&&b&&(b.k==='L'||b.k==='N')){
+        if(b.k==='N'&&isInt(b)&&c&&(c.k==='L'||(c.k==='N'&&isInt(c)))){n++;continue;}   // "4 29 D": the answer of Q4 was lost, 29 is the next number
+        if(vote(a.v,b.v)){seq.push({q:+a.v});lastQ=+a.v;}n+=2;}else n++;}}
+  for(let i=1;i<seq.length-1;i++)                                    // orphan answer between two known numbers
+    if(seq[i].o&&seq[i-1].q&&seq[i+1].q&&seq[i+1].q-seq[i-1].q===2)vote(seq[i-1].q+1,seq[i].o,w*.6);
+  if(sN.length>=3&&asc(sN)&&sL.length===sN.length)sN.forEach((t,n)=>vote(t.v,sL[n].v,w*.8));  // numbers in one column, answers in another
+}
+function removeLines(b,w,h){
+  const mk=new Uint8Array(b.length),minH=Math.max(70,Math.round(w*.03)),minV=Math.max(70,Math.round(h*.04));
+  for(let y=0;y<h;y++){let r=0;for(let x=0;x<=w;x++){const d=x<w&&b[y*w+x]===0;if(d)r++;else{if(r>=minH)for(let k=x-r;k<x;k++)mk[y*w+k]=1;r=0;}}}
+  for(let x=0;x<w;x++){let r=0;for(let y=0;y<=h;y++){const d=y<h&&b[y*w+x]===0;if(d)r++;else{if(r>=minV)for(let k=y-r;k<y;k++)mk[k*w+x]=1;r=0;}}}
+  for(let i=0;i<b.length;i++)if(mk[i])b[i]=255;}
+async function keyCanvas(blob,mode,crop){
+  const bmp=await createImageBitmap(blob),x0=crop?Math.floor(bmp.width*crop[0]):0,w0=(crop?Math.ceil(bmp.width*crop[1]):bmp.width)-x0;
+  let sc=Math.max(1,Math.min(3,2200/w0));if(w0*sc>3600)sc=3600/w0;
+  const c=document.createElement('canvas');c.width=Math.round(w0*sc);c.height=Math.round(bmp.height*sc);
+  const g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.imageSmoothingQuality='high';
+  g.drawImage(bmp,x0,0,w0,bmp.height,0,0,c.width,c.height);
+  const im=g.getImageData(0,0,c.width,c.height),d=im.data,n=c.width*c.height,y=new Uint8ClampedArray(n);let sum=0;
+  for(let i=0,p=0;i<d.length;i+=4,p++){const v=.299*d[i]+.587*d[i+1]+.114*d[i+2];y[p]=v;sum+=v;}
+  if(sum/n<110)for(let p=0;p<n;p++)y[p]=255-y[p];                    // light text on dark background
+  const hs=new Uint32Array(256);for(let p=0;p<n;p++)hs[y[p]]++;
+  let lo=0,hi=255,a=0;for(let v=0;v<256;v++){a+=hs[v];if(a>n*.01){lo=v;break;}}a=0;for(let v=255;v>=0;v--){a+=hs[v];if(a>n*.01){hi=v;break;}}
+  const rg=Math.max(40,hi-lo);for(let p=0;p<n;p++)y[p]=Math.max(0,Math.min(255,(y[p]-lo)*255/rg));
+  if(mode!=='gray'){
+    const h2=new Uint32Array(256);for(let p=0;p<n;p++)h2[y[p]]++;
+    let sm=0,sB=0,wB=0,mx=0,th=128;for(let v=0;v<256;v++)sm+=v*h2[v];
+    for(let v=0;v<256;v++){wB+=h2[v];if(!wB)continue;const wF=n-wB;if(!wF)break;sB+=v*h2[v];const mB=sB/wB,mF=(sm-sB)/wF,bt=wB*wF*(mB-mF)*(mB-mF);if(bt>mx){mx=bt;th=v;}}
+    for(let p=0;p<n;p++)y[p]=y[p]>th?255:0;
+    if(mode==='lines')removeLines(y,c.width,c.height);}
+  for(let i=0,p=0;i<d.length;i+=4,p++){d[i]=d[i+1]=d[i+2]=y[p];d[i+3]=255;}
+  g.putImageData(im,0,0);return c;}
+function keyStrips(cv){
+  const g=cv.getContext('2d',{willReadFrequently:true}),w=cv.width,h=cv.height,d=g.getImageData(0,0,w,h).data,ink=new Uint32Array(h);
+  for(let y=0;y<h;y++){let c=0;for(let x=0;x<w;x+=2)if(d[(y*w+x)*4]<128)c++;ink[y]=c;}
+  const th=Math.max(2,w*.002),S=[];let st=-1;
+  for(let y=0;y<=h;y++){const on=y<h&&ink[y]>th;if(on&&st<0)st=y;else if(!on&&st>=0){S.push([st,y]);st=-1;}}
+  const hs=S.map(s=>s[1]-s[0]).sort((a,b)=>a-b),med=hs[hs.length>>1]||20,M=[];
+  for(const s of S){const l=M[M.length-1];if(l&&s[0]-l[1]<med*.35)l[1]=s[1];else M.push([s[0],s[1]]);}
+  return M.filter(s=>s[1]-s[0]>=Math.max(10,med*.5)).map(([a,b])=>{const pa=Math.max(0,a-8),pb=Math.min(h,b+8),c=document.createElement('canvas');c.width=w;c.height=pb-pa;
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,c.height);x.drawImage(cv,0,pa,w,pb-pa,0,0,w,pb-pa);return{c,y:pa};});}
+async function ocrWordsOf(w,cv){
+  const{data}=await w.recognize(cv),ws=data.words&&data.words.length?data.words:(data.lines||[]).flatMap(l=>l.words||[]);
+  return ws.filter(x=>x.text&&x.text.trim()&&(x.confidence==null||x.confidence>15)).map(x=>({s:x.text.trim(),x0:x.bbox.x0,x1:x.bbox.x1,y0:x.bbox.y0,y1:x.bbox.y1}));}
+async function keyTextLayer(file){
+  const lib=await getPdfjs(),doc=await lib.getDocument({data:await file.arrayBuffer()}).promise,pages=[];
+  for(let p=1;p<=doc.numPages;p++){const pg=await doc.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent(),els=[];
+    for(const it of tc.items){const s=(it.str||'').trim();if(!s)continue;const tr=lib.Util.transform(vp.transform,it.transform),h=Math.hypot(tr[2],tr[3])||10;
+      els.push({s,x0:tr[4],x1:tr[4]+(it.width||0),y0:tr[5]-h*.95,y1:tr[5]+h*.25});}
+    pages.push(els);}
+  return pages;}
+const typeRanges=qs=>{const o={mcq:[],num:[]};qs.forEach(q=>o[q.type==='num'?'num':'mcq'].push(q.no));
+  const rg=a=>{const r=[];a.forEach(n=>{const l=r[r.length-1];if(l&&n===l[1]+1)l[1]=n;else r.push([n,n]);});return r.map(x=>x[0]===x[1]?x[0]:x[0]+'-'+x[1]).join(', ');};
+  return `MCQ (single correct): ${rg(o.mcq)||'none'}. Numerical value: ${rg(o.num)||'none'}.`;};
+async function aiVision(c,blob,prompt,maxTok){
+  const data=await b64raw(blob);
+  for(let a=0;a<4;a++){
+    const r=c.provider==='claude'
+      ?await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:c.model||'claude-sonnet-5-5',max_tokens:maxTok,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data}},{type:'text',text:prompt}]}]})})
+      :await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${c.model||'gemini-2.5-flash'}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':c.key},
+        body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:'image/jpeg',data}}]}],generationConfig:{responseMimeType:'application/json',temperature:0,maxOutputTokens:8192}})});
+    if(r.status===429||r.status===503||r.status===529){await new Promise(z=>setTimeout(z,5000*(a+1)));continue;}
+    const j=await r.json();if(!r.ok)throw new Error((j.error&&(j.error.message||j.error))||('HTTP '+r.status));
+    return c.provider==='claude'?(j.content||[]).map(x=>x.text||'').join(''):(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(x=>x.text||'').join('');}
+  throw new Error('AI busy, try again');}
+async function aiReadKey(c,blob,qs){
+  const txt=await aiVision(c,blob,`This image is (part of) a JEE answer key. Read EVERY question number it shows together with its answer. Reply with ONLY JSON: {"answers":{"1":"A","2":"12.5"}}.
+Question types by number: ${typeRanges(qs)} For MCQ answers give one letter A-D (convert 1/2/3/4 to A/B/C/D). For numerical answers give the number only. Do not skip entries, do not invent entries that are not visible, ignore headings and marks.`,4000);
+  const m=txt.match(/\{[\s\S]*\}/);if(!m)throw new Error('AI reply not understood');
+  const o=JSON.parse(m[0]),a=o.answers||o,r=new Map();
+  (Array.isArray(a)?a.map(x=>[x.q??x.no??x.number,x.a??x.answer]):Object.entries(a)).forEach(([k,v])=>{const q=parseInt(k,10);if(q&&v!=null&&v!=='')r.set(q,String(v));});
+  return r;}
 function progressModal(t){
   const m=document.createElement('div');m.className='modal';
   m.innerHTML=`<div class="box" style="max-width:420px"><h2>${t}</h2><div class="prog"><i></i></div>
     <div class="hint" id="pmTxt" style="margin-top:10px">Starting…</div></div>`;
   document.body.appendChild(m);
-  return{set:(s,f)=>{$('#pmTxt',m).textContent=s;m.querySelector('.prog>i').style.width=(f*100)+'%';},close:()=>m.remove()};}
-async function scanKeyFiles(files){
-  const blobs=[];
-  for(const f of files) f.type==='application/pdf'?blobs.push(...await pdfToPageBlobs(f)):blobs.push(f);
-  const pm=progressModal('Answer key padh raha hoon…');let text='';
-  try{const T=await getTesseract();const w=await T.createWorker('eng');
-    await w.setParameters({tessedit_char_whitelist:'QqOo0123456789ABCDabcd()[].,:;-/ ',preserve_interword_spaces:'1'});
-    for(let i=0;i<blobs.length;i++){pm.set(`Page ${i+1} / ${blobs.length}…`,i/blobs.length);
-      const{data}=await w.recognize(await prepForOcr(blobs[i]));text+='\n'+data.text;}
-    await w.terminate();}finally{pm.close();}
-  return parseKeyText(text);}
+  return{set:(s,f)=>{$('#pmTxt',m).textContent=s;m.querySelector('.prog>i').style.width=Math.min(100,f*100)+'%';},close:()=>m.remove()};}
+const KEY_PASSES=[['gray',null,'6'],['lines',null,'6'],['rows',null,'7'],['lines',null,'11'],['gray',null,'4'],['lines',[0,.54],'6'],['lines',[.46,1],'6'],['otsu',null,'6'],['gray',null,'6',1]];
+async function scanKeyFiles(files,qs,opts={}){
+  qs=qs||[];const N=qs.length,votes=new Map(),pm=progressModal('Reading answer key…');
+  const have=()=>{let c=0;for(let q=1;q<=N;q++)if(votes.has(q))c++;return c;},need=()=>!N||have()<N;
+  const stat=(s,f)=>pm.set(`${s} · found ${have()}/${N||'?'}`,f);
+  let worker=null,blobs=null,aiErr=null,ocrErr=null,usedAI=false;
+  const getBlobs=async()=>{if(blobs)return blobs;blobs=[];for(const f of files)f.type==='application/pdf'?blobs.push(...await pdfToPageBlobs(f)):blobs.push(f);return blobs;};
+  try{
+    for(const f of files)if(f.type==='application/pdf'){stat('Reading PDF text',.05);
+      try{(await keyTextLayer(f)).forEach(els=>keyFromLines(toLines(els.slice()),votes,3));}catch(e){console.warn('text layer',e);}}
+    const ocrNeeded=files.some(f=>f.type!=='application/pdf')||need();
+    if(ocrNeeded)try{
+      const B=await getBlobs(),T=await getTesseract();worker=await T.createWorker('eng');
+      for(let pi=0;pi<KEY_PASSES.length;pi++){
+        if(pi>=2&&!need())break;
+        const[mode,crop,psm,wl]=KEY_PASSES[pi];
+        await worker.setParameters({tessedit_pageseg_mode:psm,tessedit_char_whitelist:wl?'QqAaBbCcDd0123456789.-,:()[]/ ':'',preserve_interword_spaces:'1'});
+        for(let i=0;i<B.length;i++){stat(`Scan pass ${pi+1} · image ${i+1}/${B.length}`,.1+.6*(pi+i/B.length)/KEY_PASSES.length);
+          try{
+            if(mode==='rows'){const cv=await keyCanvas(B[i],'lines',crop),ws=[];
+              for(const st of keyStrips(cv)){(await ocrWordsOf(worker,st.c)).forEach(x=>{x.y0+=st.y;x.y1+=st.y;ws.push(x);});}
+              keyFromLines(toLines(ws),votes,1);}
+            else keyFromLines(toLines(await ocrWordsOf(worker,await keyCanvas(B[i],mode,crop))),votes,1);}
+          catch(e){console.warn('pass failed',e);}}}}catch(e){ocrErr=e;console.warn('OCR unavailable',e);}   // a failed OCR download must not stop the AI reader
+    let c=aiCfg();if(opts.ai==='force'&&!c.key)c=(await aiSettings())||{};
+    if(c.key&&opts.ai!=='off'){let B=[];try{B=await getBlobs();}catch(e){aiErr=e;}
+      for(let i=0;i<B.length;i++){stat(`AI reading image ${i+1}/${B.length}`,.75+.2*i/B.length);
+        try{const r=await aiReadKey(c,B[i],qs);usedAI=true;r.forEach((v,q)=>{const m=votes.get(q)||new Map(),k=/^[A-Da-d]$/.test(v)?v.toUpperCase():String(parseFloat(v));if(k==='NaN')return;m.set(k,(m.get(k)||0)+4);votes.set(q,m);});}
+        catch(e){aiErr=e;console.warn('AI key read',e);}}}
+  }finally{if(worker)try{await worker.terminate();}catch{}pm.close();}
+  const found=new Map();found.alt=new Map();found.weak=new Set();found.N=N;found.usedAI=usedAI;found.aiErr=aiErr;found.ocrErr=ocrErr;
+  votes.forEach((m,q)=>{const a=[...m].sort((x,y)=>y[1]-x[1]);found.set(q,a[0][0]);if(a[0][1]<1)found.weak.add(q);if(a.length>1)found.alt.set(q,a.slice(1).map(x=>x[0]));});
+  return found;}
+const keyNorm=(q,v)=>{v=String(v??'').trim().toUpperCase();if(q.type==='mcq'){if(/^[1-4]$/.test(v))return'ABCD'[+v-1];if(v==='8')return'B';if(v==='0')return'D';}return v;};
 function keyReviewModal(draft,found,onApply){
   const m=document.createElement('div');m.className='modal';
-  const rows=()=>{const off=+($('#krOff',m)?.value||0);
-    return draft.questions.map(q=>{const v=found.get(q.no+off)??'';
-      const isL=/^[A-D]$/.test(v),isN=v!==''&&!isL;
-      const flag=v===''||(q.type==='mcq'&&isN)||(q.type==='num'&&isL);
-      return `<div class="kr ${flag?'flag':''}"><b>Q${q.no}</b><span class="hint">${q.type==='mcq'?'MCQ':'Num'}</span>
-        <span class="hint">${esc(q.subject||'')}</span><input type="text" data-k="${q.id}" value="${esc(v)}" placeholder="—"></div>`;}).join('');};
-  m.innerHTML=`<div class="box" style="max-width:640px"><h2>Key detected: ${found.size} answers</h2>
+  const off=()=>+($('#krOff',m)?.value||0);
+  const rows=()=>draft.questions.map(q=>{const raw=found.get(q.no+off())??'',v=keyNorm(q,raw),alt=((found.alt&&found.alt.get(q.no+off()))||[]).map(a=>keyNorm(q,a)).filter(a=>a&&a!==v),isL=/^[A-D]$/.test(v);
+    const weak=found.weak&&found.weak.has(q.no+off()),flag=v===''||(q.type==='mcq'&&!isL)||(q.type==='num'&&isL)||alt.length||weak;
+    return `<div class="kr ${flag?'flag':''}"><b>Q${q.no}</b><span class="hint">${q.type==='mcq'?'MCQ':'Num'}</span><span class="hint">${esc(q.subject||'')}${alt.length?' · also read '+esc(alt.join('/')):''}${weak?' · low confidence':''}</span><input type="text" data-k="${q.id}" value="${esc(v)}" placeholder="—"></div>`;}).join('');
+  const head=()=>{const miss=draft.questions.filter(q=>!found.has(q.no+off())).map(q=>'Q'+q.no);
+    return `<b>${draft.questions.length-miss.length} of ${draft.questions.length} answers read</b>${found.usedAI?' · AI checked':''}${miss.length?`<br><span style="color:var(--red)">Not found: ${miss.slice(0,40).join(', ')}${miss.length>40?'…':''}</span> — type them in the highlighted rows.`:' — all found. Quickly check the highlighted rows.'}`;};
+  m.innerHTML=`<div class="box" style="max-width:640px"><h2>Answer key review</h2>
+    <p class="hint" id="krHead" style="margin:0 0 10px">${head()}</p>
     <div class="row" style="gap:12px;flex-wrap:wrap;margin-bottom:10px">
       <label class="hint">Offset <input type="number" id="krOff" value="0" style="width:74px"></label>
-      <label class="row hint" style="gap:6px"><input type="checkbox" id="krType" checked style="width:auto">Key se type bhi set karo</label></div>
-    <p class="hint">Yellow rows = shaq wali, seedha edit kar lo.</p>
+      <label class="row hint" style="gap:6px"><input type="checkbox" id="krType" checked style="width:auto">Set question type from key</label></div>
     <div id="krList" style="max-height:44dvh;overflow:auto">${rows()}</div>
     <div class="row" style="margin-top:14px"><button class="btn primary" id="krOk">Apply key</button><button class="btn ghost" id="krNo">Cancel</button></div></div>`;
   document.body.appendChild(m);
-  $('#krOff',m).oninput=()=>{$('#krList',m).innerHTML=rows();};
+  $('#krOff',m).oninput=()=>{$('#krList',m).innerHTML=rows();$('#krHead',m).innerHTML=head();};
   $('#krNo',m).onclick=()=>m.remove();
   $('#krOk',m).onclick=()=>{const st=$('#krType',m).checked;
-
-    $$('[data-k]',m).forEach(i=>{const q=draft.questions.find(x=>x.id===i.dataset.k);let v=i.value.trim().toUpperCase();
-      if(!v)return;if(st)q.type=/^[A-D]$/.test(v)?'mcq':'num';
-      if(q.type==='mcq'&&/^\d$/.test(v))v={'8':'B','0':'D','4':'A','6':'C','1':'A'}[v]||v;q.answer=v;});
+    $$('[data-k]',m).forEach(i=>{const q=draft.questions.find(x=>x.id===i.dataset.k);const v=keyNorm(q,i.value);
+      if(!v)return;if(st)q.type=/^[A-D]$/.test(v)?'mcq':'num';q.answer=v;});
     m.remove();onApply();};}
 
 /* ============ model ============ */
@@ -362,14 +701,17 @@ const idxOf=(t,id)=>t.questions.findIndex(q=>q.id===id);
 /* ============ router ============ */
 const state={view:'home',opts:{}};
 async function go(view,opts={}){state.view=view;state.opts=opts;
+  document.body.classList.toggle('in-exam',view==='exam');
   window.scrollTo(0,0);
   if(view==='home')return renderHome();
   if(view==='reports')return renderReports();
+  if(view==='about')return renderAbout();
   if(view==='builder')return renderBuilder(opts.test);
   if(view==='instructions')return renderInstructions(opts.testId);
   if(view==='exam')return renderExam(opts.testId);
   if(view==='result')return renderResult(opts.hid);
   if(view==='review')return renderReview(opts.hid,opts.index||0);}
+function setPageClick(fn){app.removeEventListener('click',app._pg);app._pg=fn;app.addEventListener('click',fn);}
 function shell(inner,nav){
   const p=PROF();
   app.innerHTML=`
@@ -378,21 +720,22 @@ function shell(inner,nav){
     <div class="spacer"></div>
     <button class="btn sm" data-install style="display:${installEvt?'inline-flex':'none'}">⤓ Install app</button>
     <button class="btn sm" data-act="prof">👤 ${esc(p.student.split(' ')[0])}</button>
-    <button class="btn sm" data-act="theme">◑</button></div>
+    <button class="btn sm" data-act="theme" aria-label="Toggle light/dark theme" title="Light / dark"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"/></svg></button></div>
   ${nav?`<div class="navs noprint">
-    ${[['home','Test Series'],['reports','Performance']].map(([k,l])=>`<button class="nav ${nav===k?'on':''}" data-nav="${k}">${l}</button>`).join('')}
+    ${[['home','Test Series'],['reports','Performance'],['about','About']].map(([k,l])=>`<button class="nav ${nav===k?'on':''}" data-nav="${k}">${l}</button>`).join('')}
   </div>`:''}
   <div class="wrap view">${inner}</div>`;
-  app.addEventListener('click',e=>{
+}
+app.addEventListener('click',e=>{          // registered ONCE (was re-added on every page render)
     const a=e.target.closest('[data-act]'),n=e.target.closest('[data-nav]'),i=e.target.closest('[data-install]');
     if(i&&installEvt){installEvt.prompt();installEvt=null;}
     if(n)go(n.dataset.nav);
     if(!a)return;
     if(a.dataset.act==='back')go('home');
     if(a.dataset.act==='theme')toggleTheme();
-    if(a.dataset.act==='prof')profileModal();});}
+    if(a.dataset.act==='prof')profileModal();});
 function profileModal(){
-  const p=PROF();const m=document.createElement('div');m.className='modal';
+  const p=PROF();document.querySelectorAll('.modal.tf-prof').forEach(x=>x.remove());const m=document.createElement('div');m.className='modal tf-prof';
   m.innerHTML=`<div class="box"><h2>Candidate profile</h2>
     <div style="display:grid;gap:10px;grid-template-columns:1fr 1fr">
       <label><span class="lb">Student name</span><input id="pfN" value="${esc(p.student)}"></label>
@@ -409,11 +752,15 @@ function profileModal(){
   document.body.appendChild(m);
   let photo=p.photo;
   $('#pfP',m).onchange=async e=>{const f=e.target.files[0];if(!f)return;
-    photo=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});toast('Photo set');};
+    const raw=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});
+    photo=await new Promise(r=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),sq=Math.min(im.width,im.height);
+      x.drawImage(im,(im.width-sq)/2,(im.height-sq)/2,sq,sq,0,0,256,256);r(c.toDataURL('image/jpeg',.85));};im.onerror=()=>r(p.photo);im.src=raw;});toast('Photo set');};
   $('#pfNo',m).onclick=()=>m.remove();
-  $('#pfOk',m).onclick=()=>{setProf({student:$('#pfN',m).value||'Student',form:$('#pfF',m).value,batch:$('#pfB',m).value,
+  $('#pfOk',m).onclick=()=>{try{setProf({student:$('#pfN',m).value||'Student',form:$('#pfF',m).value,batch:$('#pfB',m).value,
     cls:$('#pfC',m).value,course:$('#pfCo',m).value,institute:$('#pfI',m).value||'TESTIFY',session:$('#pfS',m).value,
-    centre:$('#pfT',m).value,photo});m.remove();toast('Profile saved');go(state.view,state.opts);};}
+    centre:$('#pfT',m).value,photo});}catch(e){return toast('Could not save — storage full');}
+    m.remove();toast('Profile saved');go(state.view,state.opts);};
+  m.addEventListener('mousedown',e=>{if(e.target===m)m.remove();});}
 
 /* ============ HOME ============ */
 async function renderHome(){
@@ -424,7 +771,7 @@ async function renderHome(){
   const byTest={};hist.forEach(h=>(byTest[h.testId]??=[]).push(h));
   shell(`
     <h1>Computer-Based Test Series</h1>
-    <p class="sub">Question paper PDF upload karo, answer key scan karo, NTA jaisa interface — result aur analysis ready.</p>
+    <p class="sub">Upload a question paper, scan the answer key and take the test in an NTA-style interface, with a full analysis afterwards.</p>
     <div class="row" style="margin-bottom:16px;flex-wrap:wrap">
       <button class="btn primary" data-new>＋ New test from PDF</button>
       <label class="btn soft" style="margin:0">Import .json<input type="file" accept="application/json" id="impFile" style="display:none"></label>
@@ -449,10 +796,10 @@ async function renderHome(){
             <div class="spacer"></div>
             <button class="btn ghost sm" data-exp="${t.id}">⤓</button>
             <button class="btn ghost sm" data-del="${t.id}" style="color:var(--red)">🗑</button></div></div>`}).join('')
-      :`<div class="card empty">Abhi koi test nahi. <b>＋ New test from PDF</b> dabao.</div>`}
+      :`<div class="card empty">No tests yet. Tap <b>＋ New test from PDF</b> to create your first one.</div>`}
     </div>`,'home');
   $('#impFile').onchange=async e=>{const f=e.target.files[0];if(f)await importTest(f);};
-  app.addEventListener('click',async e=>{
+  setPageClick(async e=>{
     if(e.target.closest('[data-new]'))return go('builder');
     const o=e.target.closest('[data-open]');
     if(o)return go(lmap[o.dataset.open]?'exam':'instructions',{testId:o.dataset.open});
@@ -460,7 +807,7 @@ async function renderHome(){
     const ed=e.target.closest('[data-edit]');if(ed)return go('builder',{test:await DB.get('tests',ed.dataset.edit)});
     const ex=e.target.closest('[data-exp]');if(ex)return exportTest(ex.dataset.exp);
     const d=e.target.closest('[data-del]');
-    if(d){if(!confirm('Test, uske images aur attempts delete karein?'))return;
+    if(d){if(!confirm('Delete this test, its images and all attempts?'))return;
       const t=await DB.get('tests',d.dataset.del);
       for(const q of t.questions)await DB.del('images',imgKey(t.id,q.id));
       await DB.del('tests',t.id);await DB.del('attempts',t.id);
@@ -473,11 +820,9 @@ async function renderBuilder(existing){
     paperType:'J(M)',createdAt:Date.now(),questions:[]};
   draft.negNum??=draft.neg;draft.paperType??='J(M)';
   const pending=new Map();
-  const bank=[...new Set((await DB.all('tests')).flatMap(t=>t.questions.map(q=>q.chapter)).filter(Boolean))].sort();
   shell(`
     <h1>${existing?'Edit test':'New test'}</h1>
     <p class="sub">PDF ka har page = ek question image.</p>
-    <datalist id="chBank">${bank.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
     <div class="card" style="padding:15px;display:grid;gap:11px;grid-template-columns:2fr 1fr 110px 90px 90px 90px">
       <label><span class="lb">Test name</span><input id="bName" value="${esc(draft.name)}" placeholder="QPT-05"></label>
       <label><span class="lb">Paper type</span><select id="bType">
@@ -489,23 +834,18 @@ async function renderBuilder(existing){
     <div class="card" style="padding:15px;margin-top:12px"><h2>1 · Question paper PDF</h2>
       <input type="file" id="bPdf" accept="application/pdf">
       <div class="prog" id="bProg" style="display:none"><i></i></div>
-      <div class="hint" id="bStat" style="margin-top:8px">${draft.questions.length?draft.questions.length+' questions loaded.':'Ek page par ek question best.'}</div></div>
+      <div class="hint" id="bStat" style="margin-top:8px">${draft.questions.length?draft.questions.length+' questions loaded.':'Best results with one question per page.'}</div></div>
     <div class="card" style="padding:15px;margin-top:12px"><h2>2 · Pattern</h2>
       <div id="patRows" style="display:grid;gap:8px"></div>
       <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" id="patAdd">＋ Subject</button>
         <button class="btn soft sm" id="patApply">Apply pattern</button>
         <span class="hint">subject · total Q · MCQ count</span></div></div>
-    <div class="card" style="padding:15px;margin-top:12px"><h2>3 · Chapters (bulk)</h2>
-      <div class="row" style="flex-wrap:wrap;gap:8px">
-        <input id="bkCh" list="chBank" placeholder="Chapter name" style="flex:2;min-width:170px">
-        <input type="number" id="bkFrom" placeholder="From Q" style="width:100px">
-        <input type="number" id="bkTo" placeholder="To Q" style="width:100px">
-        <button class="btn soft sm" id="bkGo">Assign</button></div>
-      <div class="hint" style="margin-top:8px">Chapter-wise analysis inhi tags par chalta hai.</div></div>
-    <div class="card" style="padding:15px;margin-top:12px"><h2>4 · Answer key</h2>
+    <div class="card" style="padding:15px;margin-top:12px"><h2>3 · Answer key</h2>
       <div class="row" style="flex-wrap:wrap;margin-bottom:10px">
         <button class="btn primary sm" id="bScan">📷 Scan key from images / PDF</button>
-        <span class="hint">Multiple images ek saath select kar sakte ho.</span></div>
+        <button class="btn soft sm" id="bScanAI" title="Uses your AI key — most accurate">✨ Scan key with AI</button>
+        <button class="btn soft sm" id="bAI">🤖 Fill missing answers with AI</button><button class="btn ghost sm" id="bAIs" title="AI settings">⚙</button>
+        <span class="hint">You can select several images at once.</span></div>
       <div id="keyList"></div></div>
     <div class="row" style="margin-top:16px"><button class="btn primary" id="bSave">Save test</button>
       <button class="btn ghost" data-act="back">Cancel</button></div>`);
@@ -521,27 +861,32 @@ async function renderBuilder(existing){
   $('#patRows').onclick=e=>{const b=e.target.closest('[data-prm]');if(b){pattern.splice(+b.dataset.prm,1);drawPattern();}};
   $('#patAdd').onclick=()=>{pattern.push({subject:'Subject',count:25,mcq:20});drawPattern();};
   $('#patApply').onclick=()=>{applyPattern(draft.questions,pattern);drawKeys();toast('Pattern applied');};
-  $('#bkGo').onclick=()=>{const ch=$('#bkCh').value.trim(),a=+$('#bkFrom').value||1,b=+$('#bkTo').value||a;
-    if(!ch)return toast('Chapter likho');
-    draft.questions.filter(q=>q.no>=a&&q.no<=b).forEach(q=>q.chapter=ch);drawKeys();toast(`Q${a}–Q${b} → ${ch}`);};
-  $('#bScan').onclick=()=>{if(!draft.questions.length)return toast('Pehle PDF upload karo');
+  $('#bScanAI').onclick=()=>{window.__keyAI='force';$('#bScan').click();};
+  $('#bScan').onclick=()=>{if(!draft.questions.length)return toast('Upload the question paper first');
     const inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.accept='image/*,application/pdf';
     inp.onchange=async()=>{const f=[...inp.files];if(!f.length)return;
-      try{const found=await scanKeyFiles(f);
-        if(!found.size)return toast('Kuch detect nahi hua — saaf image try karo');
+      try{const found=await scanKeyFiles(f,draft.questions,{ai:window.__keyAI||'auto'});window.__keyAI=null;
+        if(!found.size)return toast(found.ocrErr&&!found.usedAI?'The text reader could not be downloaded — check your internet, or add an AI key (⚙) and use the AI scan':found.aiErr?'AI could not read the key: '+String(found.aiErr.message).slice(0,80):'No answers found — try a clearer image or the AI scan');
         keyReviewModal(draft,found,()=>{drawKeys();toast('Answer key applied');});}
       catch(err){console.error(err);toast('Scan fail: '+err.message);}};
     inp.click();};
+  async function runAI(){
+    if(!draft.questions.length)return toast('Upload the question paper first');
+    if(!draft.questions.some(q=>!q.answer))return toast('All answers are already filled');
+    const st=$('#bStat');
+    const r=await aiSolve(draft.questions,async q=>pending.get(q.id)||await DB.get('images',imgKey(draft.id,q.id)),(d,n)=>st.textContent=`AI solving ${d}/${n}…`);
+    if(!r)return;drawKeys();
+    st.textContent=`AI filled ${r.done} of ${r.total}`+(r.fail?` · ${r.fail} failed${r.err?' ('+String(r.err.message).slice(0,70)+')':''}`:'')+'. AI answers can be wrong — please review them.';}
+  $('#bAI').onclick=runAI;$('#bAIs').onclick=()=>aiSettings();
   const thumb=async q=>pending.has(q.id)?URL.createObjectURL(pending.get(q.id)):await imgUrl(draft.id,q.id);
   async function drawKeys(){
     const host=$('#keyList');
-    if(!draft.questions.length){host.innerHTML='<div class="empty">Pehle PDF upload karo.</div>';return;}
+    if(!draft.questions.length){host.innerHTML='<div class="empty">Upload the question paper first.</div>';return;}
     host.innerHTML=draft.questions.map(q=>`
       <div class="bld-row" data-q="${q.id}"><b>Q${q.no}</b><img data-zoom alt="Q${q.no}">
         <select data-f="subject">${[...new Set([...pattern.map(p=>p.subject),q.subject])].filter(Boolean).map(s=>`<option ${s===q.subject?'selected':''}>${esc(s)}</option>`).join('')}</select>
         <select data-f="type"><option value="mcq" ${q.type==='mcq'?'selected':''}>MCQ</option><option value="num" ${q.type==='num'?'selected':''}>Num</option></select>
-        <div class="chc"><input data-f="chapter" list="chBank" value="${esc(q.chapter||'')}" placeholder="Chapter"></div>
-        <div class="ansc">${q.type==='mcq'?['A','B','C','D'].map(o=>`<button class="btn sm ${q.answer===o?'primary':''}" data-ans="${o}">${o}</button>`).join(' ')
+        <div class="ansc">${q.ai?`<span class="hint" title="${esc(q.remark||'')}">🤖${q.conf!=null?Math.round(q.conf*100)+'%':''}</span> `:''}${q.type==='mcq'?['A','B','C','D'].map(o=>`<button class="btn sm ${q.answer===o?'primary':''}" data-ans="${o}">${o}</button>`).join(' ')
           :`<input data-f="answer" value="${esc(q.answer||'')}" placeholder="e.g. 12">`}</div>
         <button class="btn ghost sm" data-split>✂</button></div>`).join('');
     for(const q of draft.questions){const im=host.querySelector(`[data-q="${q.id}"] img`);if(im)im.src=await thumb(q);}}
@@ -549,7 +894,7 @@ async function renderBuilder(existing){
     const row=e.target.closest('[data-q]');if(!row)return;
     const q=draft.questions.find(x=>x.id===row.dataset.q);
     const a=e.target.closest('[data-ans]');
-    if(a){q.answer=a.dataset.ans;buzz();drawKeys();return;}
+    if(a){q.answer=a.dataset.ans;q.ai=false;q.remark='';buzz();drawKeys();return;}
     if(e.target.matches('[data-zoom]'))return lightbox(e.target.src);
     if(e.target.closest('[data-split]')){
       const blob=pending.get(q.id)||await DB.get('images',imgKey(draft.id,q.id));if(!blob)return;
@@ -561,21 +906,27 @@ async function renderBuilder(existing){
       draft.questions.forEach((x,i)=>x.no=i+1);drawKeys();toast('Page split');}};
   $('#keyList').onchange=e=>{const row=e.target.closest('[data-q]');if(!row)return;
     const q=draft.questions.find(x=>x.id===row.dataset.q),f=e.target.dataset.f;if(!f)return;
-    q[f]=e.target.value;if(f==='type'){q.answer='';drawKeys();}};
+    q[f]=e.target.value;if(f==='answer'){q.ai=false;q.remark='';}if(f==='type'){q.answer='';q.ai=false;q.remark='';drawKeys();}};
   $('#bPdf').onchange=async e=>{const f=e.target.files[0];if(!f)return;
     const bar=$('#bProg');bar.style.display='block';$('#bStat').textContent='Rendering…';
-    try{const blobs=await pdfToPageBlobs(f,(i,n)=>{bar.firstElementChild.style.width=(i/n*100)+'%';$('#bStat').textContent=`Page ${i}/${n}…`;});
+    try{const cb=(i,n,l)=>{bar.firstElementChild.style.width=(i/n*100)+'%';$('#bStat').textContent=`${l||'Page'} ${i}/${n}…`;};
+      let blobs=null;try{blobs=await pdfToQuestionBlobs(f,cb);}catch(e){console.warn('smart split failed',e);}
+      const smart=!!blobs;if(!blobs)blobs=await pdfToPageBlobs(f,cb);
       draft.questions=blobs.map((b,i)=>{const id=uid();pending.set(id,b);return{id,no:i+1,subject:'',chapter:'',type:'mcq',answer:''};});
       applyPattern(draft.questions,pattern);
       if(!$('#bName').value)$('#bName').value=f.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
-      $('#bStat').textContent=`${blobs.length} questions imported.`;drawKeys();toast('PDF imported');}
-    catch(err){console.error(err);$('#bStat').textContent='PDF error: '+err.message;}
+      const want=pattern.reduce((a,x)=>a+(+x.count||0),0);
+      $('#bStat').textContent=smart?`${blobs.length} questions detected automatically.`+(want&&want!==blobs.length?` Pattern expects ${want} — check the list below and use ✂ to split any merged question.`:'')
+        :`Could not detect question numbers — imported ${blobs.length} pages. Use ✂ to split them.`;drawKeys();toast('PDF imported');}
+    catch(err){console.error(err);$('#bStat').textContent=/dynamically imported|Failed to fetch|load/i.test(err.message)?'The PDF reader could not be downloaded. Check your internet connection and try again.':'PDF error: '+err.message;}
     bar.style.display='none';};
   $('#bSave').onclick=async()=>{
     draft.name=$('#bName').value.trim()||'Untitled test';draft.paperType=$('#bType').value;
     draft.durationMin=+$('#bDur').value||180;draft.marks=+$('#bMarks').value||4;
     draft.neg=Math.abs(+$('#bNeg').value||0);draft.negNum=Math.abs(+$('#bNegN').value||0);
-    if(!draft.questions.length)return toast('Pehle PDF upload karo');
+    if(!draft.questions.length)return toast('Upload the question paper first');
+    const miss=draft.questions.filter(q=>!q.answer).length;
+    if(miss&&aiCfg().key&&confirm(miss+' question(s) have no answer key. Solve them with AI now?'))await runAI();
     for(const[qid,blob]of pending)await DB.put('images',blob,imgKey(draft.id,qid));
     await DB.put('tests',draft);toast('Saved');go('home');};
   drawKeys();}
@@ -584,7 +935,7 @@ function lightbox(src){const m=document.createElement('div');m.className='modal'
   m.onclick=()=>m.remove();document.body.appendChild(m);}
 function askSplit(src){return new Promise(res=>{
   const m=document.createElement('div');m.className='modal';
-  m.innerHTML=`<div class="box" style="max-width:min(760px,96vw)"><h2>Doosra question jahan shuru ho, wahan click karo</h2>
+  m.innerHTML=`<div class="box" style="max-width:min(760px,96vw)"><h2>Click where the second question begins</h2>
     <div style="position:relative"><img src="${src}" id="spImg" style="width:100%;border-radius:10px;background:#fff">
     <div id="spLine" style="position:absolute;left:0;right:0;height:2px;background:var(--red);display:none"></div></div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="spOk" disabled>Split here</button>
@@ -631,7 +982,7 @@ async function renderInstructions(testId){
         <p style="margin:0 0 6px"><b>Marking scheme:</b> MCQ +${t.marks} / −${t.neg}, Numerical +${t.marks} / −${t.negNum??t.neg}, unattempted 0.</p>
         <p style="margin:0 0 6px"><b>Navigating:</b> Click <i>Save &amp; Next</i> to save your answer and move on, or <i>Mark for Review &amp; Next</i> to flag it. Selecting an option and pressing <i>Clear Response</i> will deselect it.</p>
         <p style="margin:0 0 6px"><b>Sections:</b> ${secs.join(', ')} — Section A (MCQ) and Section B (numerical) where applicable. You may shuffle between sections and questions at any time.</p>
-        <p class="hint" style="margin:10px 0 0">Keyboard: 1–4 select option · Enter = Save &amp; Next · ← → navigate · M = mark · C = calculator.</p>
+        <p class="hint" style="margin:10px 0 0">Keyboard: 1–4 select option · Enter = Save &amp; Next · ← → navigate · M = mark.</p>
         <div class="card" style="padding:12px;margin-top:14px;background:var(--brand-soft);border:0">
           <div class="row" style="flex-wrap:wrap;gap:16px">
             <div><div class="hint">Candidate</div><b>${esc(p.student)}</b></div>
@@ -660,8 +1011,7 @@ async function renderExam(testId){
     <div class="nta-top">
       <div class="ex">${esc(t.name)} — ${esc(t.paperType||'J(M)')}</div>
       <div class="spacer" style="flex:1"></div>
-      <div class="nta-sys"><button class="nbtn" id="btnCalc">Calculator</button>
-        <button class="nbtn" id="btnInstr">Instructions</button>
+      <div class="nta-sys"><button class="nbtn" id="btnInstr">Instructions</button>
         <button class="nbtn nta-menu" id="btnPal">Question Palette</button></div></div>
     <div class="nta-bar2">
       <span style="font-size:12.5px">Candidate: <b>${esc(p.student)}</b></span>
@@ -694,14 +1044,10 @@ async function renderExam(testId){
           <button class="nbtn" id="bSummary">Question Paper</button>
           <div style="flex:1"></div>
           <button class="nbtn red" id="bSubmit">Submit Test</button></div></aside></div>
-  </div>
-  <div class="calc" id="calc"><div class="hd" id="calcHd">Scientific Calculator<div style="flex:1"></div><span id="calcX" style="cursor:pointer">✕</span></div>
-    <input id="calcIn" value="" readonly><div class="g" id="calcG"></div></div>`;
-  buildCalc();
+  </div>`;
   $('#btnPal').onclick=()=>{$('#side').classList.add('open');$('#scrim').classList.add('on');};
   $('#scrim').onclick=()=>{$('#side').classList.remove('open');$('#scrim').classList.remove('on');};
   $('#btnInstr').onclick=()=>instrModal(t);
-  $('#btnCalc').onclick=()=>$('#calc').classList.toggle('on');
   $('#subTabs').onclick=e=>{const b=e.target.closest('[data-sub]');if(!b)return;
     const i=t.questions.findIndex(q=>q.subject===b.dataset.sub);if(i>=0)goQ(i);};
   $('#secTabs').onclick=e=>{const b=e.target.closest('[data-sec]');if(!b)return;
@@ -721,8 +1067,7 @@ async function renderExam(testId){
     if(['1','2','3','4'].includes(e.key)&&cur().type==='mcq')choose('ABCD'[+e.key-1]);
     else if(e.key==='Enter'||e.key==='ArrowRight')goQ(at.current+1);
     else if(e.key==='ArrowLeft')goQ(at.current-1);
-    else if(k==='m'){at.marked[cur().id]=true;paintPalette();save();}
-    else if(k==='c')$('#calc').classList.toggle('on');};
+    else if(k==='m'){at.marked[cur().id]=true;paintPalette();save();}};
   let sx=0,sy=0;
   $('#qbody').addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
   $('#qbody').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
@@ -738,7 +1083,7 @@ async function renderExam(testId){
     const q=cur(),url=await imgUrl(t.id,q.id);
     const negV=q.type==='mcq'?t.neg:(t.negNum??t.neg);
     $('#qhead').innerHTML=`<b>Question No. ${q.no}</b>
-      <span class="hint">${esc(q.subject)}${q.chapter?' · '+esc(q.chapter):''}</span>
+      <span class="hint">${esc(q.subject)}</span>
       <span class="hint">Question Type: ${q.type==='mcq'?'MCQ':'Numerical'}</span>
       <div class="nta-mk"><span class="pos">Marks +${t.marks}</span><span class="neg">Negative −${negV}</span>
       <span id="qTime" class="hint">${mmss(at.timeSpent[q.id]||0)}</span></div>`;
@@ -801,7 +1146,7 @@ async function renderExam(testId){
     const m=document.createElement('div');m.className='modal';
     m.innerHTML=`<div class="box"><h2>Submit Test</h2>
       <div class="tblwrap"><table><thead><tr><th>Section</th><th>Total</th><th>Answered</th><th>Not answered</th><th>Marked</th><th>Not visited</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="hint" style="margin:12px 0 0">Time remaining ${hhmmss((at.endsAt-Date.now())/1000)}. Submit ke baad resume nahi hoga.</p>
+      <p class="hint" style="margin:12px 0 0">Time remaining ${hhmmss((at.endsAt-Date.now())/1000)}. You cannot resume after submitting.</p>
       <div class="row" style="margin-top:14px"><button class="btn danger" id="okS">Yes, submit</button>
       <button class="btn ghost" id="noS">No, go back</button></div></div>`;
     document.body.appendChild(m);
@@ -826,42 +1171,9 @@ function instrModal(t){
   m.innerHTML=`<div class="box"><h2>Instructions</h2>
     <p style="margin:0 0 8px">MCQ: +${t.marks} / −${t.neg}. Numerical: +${t.marks} / −${t.negNum??t.neg}. Unattempted 0.</p>
     <p style="margin:0 0 8px">Marked-for-review questions that also carry an answer <b>will be evaluated</b>.</p>
-    <p class="hint">Keyboard: 1–4 option · Enter Save &amp; Next · ← → navigate · M mark · C calculator.</p>
+    <p class="hint">Keyboard: 1–4 option · Enter Save &amp; Next · ← → navigate · M mark.</p>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="iOk">Close</button></div></div>`;
   document.body.appendChild(m);$('#iOk',m).onclick=()=>m.remove();}
-function buildCalc(){
-  const keys=['sin','cos','tan','log','ln','(',')','^','√','π','7','8','9','/','C','4','5','6','*','⌫','1','2','3','-','=','0','.','e','+','±'];
-  $('#calcG').innerHTML=keys.map(k=>`<button data-c="${k}">${k}</button>`).join('');
-  const inp=$('#calcIn');
-  $('#calcX').onclick=()=>$('#calc').classList.remove('on');
-  $('#calcG').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;
-    const k=b.dataset.c;let v=inp.value;
-    if(k==='C')v='';
-    else if(k==='⌫')v=v.slice(0,-1);
-    else if(k==='±')v=v.startsWith('-')?v.slice(1):'-'+v;
-    else if(k==='=')v=String(calcEval(v));
-    else if(['sin','cos','tan','log','ln'].includes(k))v+=k+'(';
-    else if(k==='√')v+='sqrt(';
-    else v+=k;
-    inp.value=v;};
-  let drag=null;
-  $('#calcHd').onpointerdown=e=>{const c=$('#calc');const r=c.getBoundingClientRect();
-    drag={dx:e.clientX-r.left,dy:e.clientY-r.top};c.setPointerCapture?.(e.pointerId);};
-  addEventListener('pointermove',e=>{if(!drag)return;const c=$('#calc');
-    c.style.left=(e.clientX-drag.dx)+'px';c.style.top=(e.clientY-drag.dy)+'px';c.style.right='auto';c.style.bottom='auto';});
-  addEventListener('pointerup',()=>drag=null);}
-function calcEval(s){
-  try{
-    let e=s.replace(/π/g,'PI').replace(/(?<![a-z])e(?![a-z])/g,'E').replace(/\^/g,'**')
-      .replace(/ln\(/g,'log(').replace(/log\(/g,'LOG10(').replace(/LOG10\(/g,'log10(');
-    if(!/^[0-9+\-*/().,%\sA-Za-z_]*$/.test(e))return 'Error';
-    const allowed=['sin','cos','tan','asin','acos','atan','sqrt','log','log10','abs','exp','PI','E','pow','round','floor','ceil'];
-    const names=e.match(/[A-Za-z_]+/g)||[];
-    if(names.some(n=>!allowed.includes(n)))return 'Error';
-    const f=new Function('M',`with(M){return (${e})}`);
-    const r=f(Math);return Number.isFinite(r)?+r.toPrecision(12):'Error';
-  }catch{return 'Error';}}
-
 /* ============ grading ============ */
 const near=(a,b)=>Math.abs(parseFloat(a)-parseFloat(b))<=0.01;
 function isCorrect(q,g){if(g==null||g==='')return false;
@@ -913,23 +1225,14 @@ async function renderResult(hid){
       ${Object.entries(r.tags).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row" style="margin:8px 0">
         <span style="flex:1">${k}</span><div class="abar" style="flex:2"><i style="width:${v/r.records.length*100}%;background:var(--brand)"></i></div>
         <b style="width:32px;text-align:right">${v}</b></div>`).join('')}
-      <p class="hint" style="margin:10px 0 0">Careless = galat + median se aadha time. Concept gap = galat par time bhi gaya. Overtime correct = sahi par 2× median time.</p></div>
-    <div class="card" style="padding:15px;margin-top:12px"><h2>Focus chapters</h2>
-      ${Object.values(r.perCh).filter(c=>['Weak','Needs practice'].includes(verdict(c)[1])).sort((a,b)=>a.score-b.score).slice(0,8)
-        .map(c=>`<div class="row" style="margin:7px 0"><span style="flex:1">${esc(c.chapter)} <span class="hint">· ${esc(c.subject)}</span></span>
-        <span class="tag ${verdict(c)[0]}">${acc(c)}% · ${c.score}/${c.max}</span></div>`).join('')||'<div class="hint">Sab strong!</div>'}</div>`;
+      <p class="hint" style="margin:10px 0 0">Careless = wrong in under half the median time. Concept gap = wrong after a long time. Overtime correct = right, but took over 2× the median time.</p></div>`;
   const subjects=()=>`<div class="card" style="padding:15px"><div class="tblwrap"><table>
     <thead><tr><th>Subject</th><th>Score</th><th>Acc</th><th>Correct</th><th>Wrong</th><th>Left</th><th>Time</th></tr></thead>
     <tbody>${Object.entries(r.per).map(([s,p])=>`<tr><td><b>${esc(s)}</b>
       <div class="abar" style="margin-top:5px"><i style="width:${acc(p)}%;background:${barc(acc(p))}"></i></div></td>
       <td><b>${p.score}</b>/${p.max}</td><td>${acc(p)}%</td><td style="color:var(--green)">${p.correct}</td>
       <td style="color:var(--red)">${p.wrong}</td><td>${p.skipped}</td><td>${hhmmss(p.time)}</td></tr>`).join('')}</tbody></table></div></div>`;
-  const chapters=()=>Object.keys(r.per).map(s=>`<div class="card" style="padding:15px;margin-bottom:12px"><h2>${esc(s)}</h2>
-    <div class="tblwrap"><table><thead><tr><th>Chapter</th><th>Q</th><th>Score</th><th>Acc</th><th>Time/Q</th><th>Verdict</th></tr></thead>
-    <tbody>${Object.values(r.perCh).filter(c=>c.subject===s).sort((a,b)=>acc(a)-acc(b)).map(c=>{const[cl,lb]=verdict(c);
-      return `<tr><td>${esc(c.chapter)}<div class="abar" style="margin-top:5px"><i style="width:${acc(c)}%;background:${barc(acc(c))}"></i></div></td>
-      <td>${c.total}</td><td><b>${c.score}</b>/${c.max}</td><td>${acc(c)}%</td><td>${mmss(c.time/c.total)}</td>
-      <td><span class="tag ${cl}">${lb}</span></td></tr>`;}).join('')}</tbody></table></div></div>`).join('');
+
   const timeTab=()=>{const cs=r.records.filter(x=>x.status==='correct'),ws=r.records.filter(x=>x.status==='wrong');
     const avg=a=>a.length?a.reduce((s,x)=>s+x.time,0)/a.length:0;
     const over=r.records.filter(x=>x.time>r.median*2&&x.time>60).sort((a,b)=>b.time-a.time).slice(0,12);
@@ -940,16 +1243,16 @@ async function renderResult(hid){
       <div class="stat"><span class="hint">Median / Q</span><b>${mmss(r.median)}</b></div></div>
       <div class="card" style="padding:15px;margin-top:14px"><h2>Time traps</h2>
       ${over.map(x=>`<div class="row" style="margin:7px 0"><b style="width:44px">Q${x.no}</b>
-        <span style="flex:1" class="hint">${esc(x.chapter)}</span>
+        <span style="flex:1" class="hint">${esc(x.subject)}</span>
         <span class="tag ${x.status==='correct'?'t-str':x.status==='wrong'?'t-weak':'t-nil'}">${x.status}</span>
-        <b style="width:68px;text-align:right">${mmss(x.time)}</b></div>`).join('')||'<div class="hint">Koi bada time trap nahi.</div>'}</div>`;};
+        <b style="width:68px;text-align:right">${mmss(x.time)}</b></div>`).join('')||'<div class="hint">No major time traps.</div>'}</div>`;};
   const qtab=()=>`<div class="card" style="padding:15px"><div class="tblwrap"><table>
-    <thead><tr><th>Q</th><th>Subject</th><th>Chapter</th><th>You</th><th>Key</th><th>Marks</th><th>Time</th><th>Tag</th></tr></thead>
+    <thead><tr><th>Q</th><th>Subject</th><th>You</th><th>Key</th><th>Marks</th><th>Time</th><th>Tag</th></tr></thead>
     <tbody>${r.records.map(x=>`<tr data-q="${x.no-1}" style="cursor:pointer"><td><b>Q${x.no}</b></td><td>${esc(x.subject)}</td>
-      <td>${esc(x.chapter)}</td><td style="color:${x.status==='correct'?'var(--green)':x.status==='wrong'?'var(--red)':'var(--muted)'}">${esc(x.given||'—')}</td>
+      <td style="color:${x.status==='correct'?'var(--green)':x.status==='wrong'?'var(--red)':'var(--muted)'}">${esc(x.given||'—')}</td>
       <td>${esc(x.answer||'—')}</td><td>${x.marks>0?'+':''}${x.marks}</td><td>${mmss(x.time)}</td><td class="hint">${x.tag}</td></tr>`).join('')}
     </tbody></table></div></div>`;
-  const paint=()=>{$('#anBody').innerHTML={overview:overview(),subjects:subjects(),chapters:chapters(),time:timeTab(),questions:qtab()}[tab];
+  const paint=()=>{$('#anBody').innerHTML={overview:overview(),subjects:subjects(),time:timeTab(),questions:qtab()}[tab];
 
     $$('#anTabs .tab').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
 
@@ -966,7 +1269,7 @@ async function renderResult(hid){
       <button class="btn" id="csv">⤓ CSV</button>
       <button class="btn" id="retake">Retake test</button>
       <button class="btn ghost" data-act="back">Home</button></div>
-    <div class="anTabs" id="anTabs">${[['overview','Overview'],['subjects','Subjects'],['chapters','Chapters'],['time','Time'],['questions','All questions']]
+    <div class="anTabs" id="anTabs">${[['overview','Overview'],['subjects','Subjects'],['time','Time'],['questions','All questions']]
       .map(([k,l])=>`<button class="tab" data-t="${k}">${l}</button>`).join('')}</div>
     <div id="anBody"></div>`);
   $('#anTabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;paint();}};
@@ -974,8 +1277,8 @@ async function renderResult(hid){
   $('#rev').onclick=()=>go('review',{hid});
   $('#pdf').onclick=()=>printReport(singleReportHTML(h));
   $('#csv').onclick=()=>{
-    const rows=[['Q','Subject','Chapter','Type','Your answer','Key','Status','Marks','Time(s)','Tag'],
-      ...r.records.map(x=>[x.no,x.subject,x.chapter,x.type,x.given,x.answer,x.status,x.marks,Math.round(x.time),x.tag])];
+    const rows=[['Q','Subject','Type','Your answer','Key','Status','Marks','Time(s)','Tag'],
+      ...r.records.map(x=>[x.no,x.subject,x.type,x.given,x.answer,x.status,x.marks,Math.round(x.time),x.tag])];
     dl(new Blob([rows.map(r0=>r0.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'}),
       `${h.testName.replace(/\s+/g,'-')}-questions.csv`);};
   $('#retake').onclick=()=>go('instructions',{testId:h.testId});
@@ -998,13 +1301,13 @@ async function renderReview(hid,index){
   $('#toRes').onclick=()=>go('result',{hid});
   $('#filters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;
     filter=b.dataset.f;$$('#filters [data-f]').forEach(x=>x.classList.toggle('primary',x===b));
-    const l=visible();if(l.length){i=qs.findIndex(x=>x.id===l[0].id);paint();}else toast('Yahan kuch nahi');};
+    const l=visible();if(l.length){i=qs.findIndex(x=>x.id===l[0].id);paint();}else toast('Nothing here');};
   async function paint(){
     const q=qs[i],url=t?await imgUrl(t.id,q.id):'',st=stOf(q),g=h.answers[q.id];
     const col=st==='correct'?'var(--green)':st==='wrong'?'var(--red)':'var(--muted)';
     $('#revCard').innerHTML=`
       <div class="row" style="margin-bottom:10px"><div><b>Question ${q.no}</b>
-        <div class="hint">${esc(q.subject)}${q.chapter?' · '+esc(q.chapter):''} · ${q.type==='mcq'?'MCQ':'Numerical'} · ${mmss(h.timeSpent[q.id]||0)}</div></div>
+        <div class="hint">${esc(q.subject)} · ${q.type==='mcq'?'MCQ':'Numerical'} · ${mmss(h.timeSpent[q.id]||0)}</div></div>
         <div class="spacer"></div><span class="chip" style="background:color-mix(in srgb,${col} 16%,transparent);color:${col}">${st}</span></div>
       ${url?`<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff"><img src="${url}" style="width:100%;display:block"></div>`
         :'<div class="hint">Question image unavailable (test deleted).</div>'}
@@ -1015,6 +1318,7 @@ async function renderReview(hid,index){
           ${o}${ok?' · correct answer':''}${mine?' · your answer':''}</div>`;}).join('')}</div>`
         :`<div class="stats"><div class="stat"><span class="hint">Your answer</span><b>${esc(g||'—')}</b></div>
           <div class="stat"><span class="hint">Correct answer</span><b>${esc(q.answer||'—')}</b></div></div>`}
+      ${(()=>{const tq=t&&t.questions.find(x=>x.id===q.id);return tq&&tq.remark?`<div class="card" style="padding:12px;margin-top:12px"><div class="hint">${tq.ai?'🤖 AI explanation — verify before trusting':'Explanation'}</div><div style="margin-top:4px">${esc(tq.remark)}</div></div>`:'';})()}
       <div class="row" style="margin-top:14px"><button class="btn sm" id="pv">‹ Prev</button><button class="btn sm" id="nx">Next ›</button></div>`;
     $('#pv').onclick=()=>{const l=visible(),p=l.findIndex(x=>x.id===q.id);if(p>0){i=qs.findIndex(x=>x.id===l[p-1].id);paint();}};
     $('#nx').onclick=()=>{const l=visible(),p=l.findIndex(x=>x.id===q.id);if(p<l.length-1){i=qs.findIndex(x=>x.id===l[p+1].id);paint();}};
@@ -1024,6 +1328,38 @@ async function renderReview(hid,index){
   paint();}
 
 /* ============ REPORTS ============ */
+/* ============ About the author ============ */
+const AUTHOR={name:'Sarthak Nainwal',role:'Creator & developer of TesTify',tag:'JEE 2027 aspirant · builds his own study tools',
+  github:'https://github.com/SarthakNainwal20',repo:'https://github.com/SarthakNainwal20/TesTify',version:'2.1'};
+async function renderAbout(){
+  const ini=AUTHOR.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  shell(`<div class="ab">
+    <section class="ab-hero">
+      <div class="ab-ring"><div class="ab-av">${esc(ini)}</div></div>
+      <div class="ab-eyebrow">About the author</div>
+      <h1 class="ab-name">${esc(AUTHOR.name)}</h1>
+      <div class="ab-role">${esc(AUTHOR.role)}</div>
+      <div class="ab-tag">${esc(AUTHOR.tag)}</div>
+      <div class="ab-rule"></div>
+      <p class="ab-quote">TesTify is a computer-based test platform for JEE practice, designed to feel like the real exam and to turn every attempt into clear, actionable analysis.</p>
+    </section>
+    <section class="ab-grid">
+      <article class="ab-card"><div class="ab-ico">◈</div><h3>Faithful to the real exam</h3><p>The interface follows the computer-based test pattern, with its question palette, timer, marking and section flow, so exam day feels familiar.</p></article>
+      <article class="ab-card"><div class="ab-ico">◇</div><h3>Honest analytics</h3><p>Every attempt is tagged by time spent and outcome, separating careless slips from concept gaps, so revision time goes where it counts.</p></article>
+      <article class="ab-card"><div class="ab-ico">◉</div><h3>Private by design</h3><p>Your tests and results live in your own account. Optional AI features use a key stored only on your device.</p></article>
+    </section>
+    <section class="ab-card ab-wide">
+      <h3>Built with</h3>
+      <div class="ab-chips">${['HTML · CSS · JavaScript','Progressive Web App','pdf.js','Tesseract OCR','Supabase','Capacitor (Android)'].map(x=>`<span>${x}</span>`).join('')}</div>
+    </section>
+    <section class="ab-links">
+      <a class="btn primary" href="${AUTHOR.github}" target="_blank" rel="noopener noreferrer">View GitHub profile</a>
+      <a class="btn" href="${AUTHOR.repo}" target="_blank" rel="noopener noreferrer">Project source</a>
+    </section>
+    <div class="ab-foot">TesTify v${AUTHOR.version} · Crafted with care by ${esc(AUTHOR.name)}</div>
+  </div>`,'about');}
+window.tfGo=go;
+
 async function renderReports(){
   const hist=(await DB.all('history')).sort((a,b)=>b.submittedAt-a.submittedAt);
   const p=PROF();
@@ -1054,15 +1390,8 @@ async function renderReports(){
         <td>${h.mode}</td><td>${h.result.score} / ${h.result.total}</td><td>${h.result.pct}</td><td>${h.result.accuracy}%</td>
         ${subjAll.map(s=>{const o=h.result.per[s];return `<td>${o?o.score+' / '+o.max:'—'}</td>`}).join('')}
         <td><button class="btn sm" data-hid="${h.id}">Open</button>
-        <button class="btn ghost sm" data-hdel="${h.id}" style="color:var(--red)">🗑</button></td></tr>`).join('')}</tbody></table></div></div>
-    <div class="card" style="padding:15px;margin-top:12px"><h2>Cumulative chapter performance</h2><div class="tblwrap"><table>
-      <thead><tr><th>Subject</th><th>Chapter</th><th>Q faced</th><th>Score</th><th>Accuracy</th><th>Verdict</th></tr></thead>
-      <tbody>${Object.values(agg).sort((a,b)=>acc(a)-acc(b)).map(c=>{const a=acc(c);
-        const[cl,lb]=c.correct+c.wrong===0?['t-nil','Untouched']:a>=80?['t-str','Strong']:a>=50?['t-mid','Needs practice']:['t-weak','Weak'];
-        return `<tr><td>${esc(c.subject)}</td><td>${esc(c.chapter)}</td><td>${c.total}</td><td>${c.score}/${c.max}</td>
-        <td>${a}%<div class="abar" style="margin-top:4px"><i style="width:${a}%;background:${a>=80?'var(--green)':a>=50?'var(--amber)':'var(--red)'}"></i></div></td>
-        <td><span class="tag ${cl}">${lb}</span></td></tr>`;}).join('')}</tbody></table></div></div>`
-    :`<div class="card empty">Abhi koi test attempt nahi kiya. Pehla test do, report yahin ban jaayegi.</div>`}`,'reports');
+        <button class="btn ghost sm" data-hdel="${h.id}" style="color:var(--red)">🗑</button></td></tr>`).join('')}</tbody></table></div></div>`
+    :`<div class="card empty">You have not attempted any test yet. Take your first test and your report will appear here.</div>`}`,'reports');
   if(!hist.length)return;
   $('#allPdf').onclick=()=>printReport(overallReportHTML(hist,agg));
   $('#allCsv').onclick=()=>{
@@ -1074,10 +1403,10 @@ async function renderReports(){
   $('#backup').onclick=async()=>{
     dl(new Blob([JSON.stringify({profile:PROF(),history:await DB.all('history'),tests:(await DB.all('tests')).map(t=>({...t}))})],
       {type:'application/json'}),'testify-backup.json');toast('Backup saved');};
-  app.addEventListener('click',async e=>{
+  setPageClick(async e=>{
     const o=e.target.closest('[data-hid]');if(o)return go('result',{hid:o.dataset.hid});
     const d=e.target.closest('[data-hdel]');
-    if(d){if(!confirm('Ye attempt history se hata dein?'))return;await DB.del('history',d.dataset.hdel);renderReports();}});}
+    if(d){if(!confirm('Remove this attempt from history?'))return;await DB.del('history',d.dataset.hdel);renderReports();}});}
 
 /* ============ printable reports ============ */
 const RCSS=`<style>
@@ -1124,11 +1453,6 @@ function singleReportHTML(h){
   <table><tr><th>Subject</th><th>Score</th><th>Accuracy</th><th>Correct</th><th>Wrong</th><th>Unattempted</th><th>Time</th></tr>
   ${Object.entries(r.per).map(([s,o])=>`<tr><td>${esc(s)}</td><td>${o.score} / ${o.max}</td><td>${acc(o)}%</td>
     <td>${o.correct}</td><td>${o.wrong}</td><td>${o.skipped}</td><td>${hhmmss(o.time)}</td></tr>`).join('')}</table>
-  <h2>Chapter-wise performance</h2>
-  <table><tr><th>Subject</th><th>Chapter</th><th>Q</th><th>Score</th><th>Accuracy</th><th>Avg time/Q</th><th>Verdict</th></tr>
-  ${Object.values(r.perCh).sort((a,b)=>a.subject.localeCompare(b.subject)||acc(a)-acc(b)).map(c=>{const[cl,lb]=vt(c);
-    return `<tr><td>${esc(c.subject)}</td><td>${esc(c.chapter)}</td><td>${c.total}</td><td>${c.score} / ${c.max}</td>
-    <td>${acc(c)}%</td><td>${mmss(c.time/c.total)}</td><td><span class="tag ${cl}">${lb}</span></td></tr>`;}).join('')}</table>
   <h2>Attempt quality</h2>
   <table><tr><th>Category</th><th>Questions</th><th>Meaning</th></tr>
   ${Object.entries(r.tags).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td><td>${
@@ -1138,8 +1462,8 @@ function singleReportHTML(h){
     k==='Perfect attempt'?'Correct within normal time':
     k==='Attempted & left'?'Time spent but no answer marked':'Question never worked on'}</td></tr>`).join('')}</table>
   <h2>Question-wise log</h2>
-  <table><tr><th>Q</th><th>Subject</th><th>Chapter</th><th>Type</th><th>Your</th><th>Key</th><th>Status</th><th>Marks</th><th>Time</th></tr>
-  ${r.records.map(x=>`<tr><td>${x.no}</td><td>${esc(x.subject)}</td><td>${esc(x.chapter)}</td><td>${x.type==='mcq'?'MCQ':'Num'}</td>
+  <table><tr><th>Q</th><th>Subject</th><th>Type</th><th>Your</th><th>Key</th><th>Status</th><th>Marks</th><th>Time</th></tr>
+  ${r.records.map(x=>`<tr><td>${x.no}</td><td>${esc(x.subject)}</td><td>${x.type==='mcq'?'MCQ':'Num'}</td>
     <td>${esc(x.given||'—')}</td><td>${esc(x.answer||'—')}</td><td>${x.status}</td><td>${x.marks>0?'+':''}${x.marks}</td>
     <td>${mmss(x.time)}</td></tr>`).join('')}</table>
   <div class="foot"><span>${esc(PROF().institute)} · Computer-Based Test Series</span><span>Report generated by Testify CBT</span></div>
@@ -1168,16 +1492,11 @@ function overallReportHTML(hist,agg){
   ${subjAll.map(s=>{const o={score:0,max:0,correct:0,wrong:0,skipped:0};
     hist.forEach(h=>{const x=h.result.per[s];if(x){o.score+=x.score;o.max+=x.max;o.correct+=x.correct;o.wrong+=x.wrong;o.skipped+=x.skipped;}});
     return `<tr><td>${esc(s)}</td><td>${o.score}</td><td>${o.max}</td><td>${acc(o)}%</td><td>${o.correct}</td><td>${o.wrong}</td><td>${o.skipped}</td></tr>`;}).join('')}</table>
-  <h2>Cumulative chapter performance</h2>
-  <table><tr><th>Subject</th><th>Chapter</th><th>Q faced</th><th>Score</th><th>Accuracy</th><th>Verdict</th></tr>
-  ${Object.values(agg).sort((a,b)=>acc(a)-acc(b)).map(c=>{const[cl,lb]=vt(c);
-    return `<tr><td>${esc(c.subject)}</td><td>${esc(c.chapter)}</td><td>${c.total}</td><td>${c.score} / ${c.max}</td>
-    <td>${acc(c)}%</td><td><span class="tag ${cl}">${lb}</span></td></tr>`;}).join('')}</table>
   <div class="foot"><span>${esc(PROF().institute)} · Computer-Based Test Series</span><span>Report generated by Testify CBT</span></div>
   </body></html>`;}
 function printReport(html){
   const w=window.open('','_blank');
-  if(!w)return toast('Popup block ho gaya — allow karo');
+  if(!w)return toast('Pop-up blocked — please allow pop-ups');
   w.document.write(html);w.document.close();
   w.onload=()=>setTimeout(()=>w.print(),350);
   setTimeout(()=>{try{w.print()}catch{}},900);}
@@ -1185,7 +1504,7 @@ function printReport(html){
 /* ============ boot ============ */
 (async()=>{
   const p=new URLSearchParams(location.search);
-  if(p.get('test')){try{await importTest(await(await fetch(p.get('test'))).text());}catch{toast('Remote test load nahi hua')}}
+  if(p.get('test')){try{await importTest(await(await fetch(p.get('test'))).text());}catch{toast('Could not load the remote test')}}
   go('home');
 })();
 </script>
@@ -1244,20 +1563,6 @@ html[data-theme="dark"] .tf-credit .n{background:linear-gradient(92deg,#7cb2f7,#
   color:var(--text);font-weight:600;cursor:pointer}
 .tf-b.p{background:linear-gradient(180deg,#1565c0,#0d47a1);color:#fff;border:0}
 
-/* calculator */
-#tfCalc .k{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:10px}
-#tfCalc .k button{padding:13px 0;border-radius:11px;border:1px solid var(--line);
-  background:var(--card);color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
-#tfCalc .k button:active{transform:scale(.94)}
-#tfCalc .k .op{background:var(--brand-soft);color:var(--brand);border-color:transparent}
-#tfCalc .k .eq{background:linear-gradient(180deg,#1565c0,#0d47a1);color:#fff;border:0}
-#tfCalc .scr{background:#0b1220;color:#e6ecf7;border-radius:12px;padding:12px 14px;text-align:right;
-  font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,monospace}
-#tfCalc .scr .e{font-size:13px;opacity:.6;min-height:18px;word-break:break-all}
-#tfCalc .scr .r{font-size:26px;font-weight:700;margin-top:4px;word-break:break-all}
-.tf-calc-fab{position:fixed;right:14px;bottom:calc(14px + var(--safe-b));z-index:99990;width:46px;height:46px;
-  border-radius:50%;background:linear-gradient(180deg,#1565c0,#0d47a1);color:#fff;border:0;
-  box-shadow:0 10px 26px rgba(13,71,161,.42);font-size:19px;cursor:pointer}
 .tf-prog{position:fixed;inset:0;z-index:100001;background:rgba(6,12,24,.8);color:#fff;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px}
 .tf-prog .bar{width:min(320px,70vw);height:6px;border-radius:99px;background:#22304a;overflow:hidden}
@@ -1305,7 +1610,8 @@ html[data-theme="dark"] .tf-credit .n{background:linear-gradient(92deg,#7cb2f7,#
   function vis(el){if(!el||!el.isConnected)return false;var s=getComputedStyle(el);
     return s.display!=='none'&&s.visibility!=='hidden'&&+s.opacity>.05&&el.offsetHeight>40;}
   function open_(){return [...document.querySelectorAll(SEL)].filter(vis).filter(e=>!e.closest('.tf-ov'));}
-  function hide(el){el.classList.remove('open','show','active','visible');el.setAttribute('hidden','');
+  function hide(el){if(el.parentNode===document.body&&el.classList.contains('modal')){el.remove();document.body.style.overflow='';return;}
+    el.classList.remove('open','show','active','visible');el.setAttribute('hidden','');
     el.style.display='none';document.body.style.overflow='';document.documentElement.style.overflow='';}
   window.tfCloseModal=function(){
     var o=open_();if(!o.length)return false;var t=o[o.length-1];
@@ -1326,30 +1632,28 @@ html[data-theme="dark"] .tf-credit .n{background:linear-gradient(92deg,#7cb2f7,#
   }
   new MutationObserver(deco).observe(document.body,{childList:true,subtree:true,
     attributes:true,attributeFilter:['class','style','hidden']});
-  setInterval(deco,900);
+  deco();
 })();
 
-/* ---------- 3. CREDIT FOOTER (permanent) ---------- */
+/* ---------- 3. CREDIT FOOTER ---------- */
 (function(){
   function mount(){
-    if(document.querySelector('.tf-credit'))return;
-    if(document.querySelector('.tf-ov'))return;
-    var host=document.querySelector('#home,.home,.page.active,.screen.active,.app')||document.body;
-    var f=document.createElement('footer');f.className='tf-credit';
-    f.innerHTML='<div class="m">Designed &amp; developed by</div>'+
-      '<div class="n">Sarthak Nainwal</div>'+
-      '<div class="s">Testify CBT • v2.0 • Built for JEE aspirants</div>';
+    if(document.querySelector('.tf-credit')||document.querySelector('.tf-ov,.tf-gate,#side'))return;
+    var host=document.querySelector('#app .view,#home,.home,.page.active,.screen.active,.app')||document.body;
+    var f=document.createElement('footer');f.className='tf-credit';f.title='About the author';
+    f.innerHTML='<div class="m">Crafted by</div><div class="n">Sarthak Nainwal</div><div class="s">TesTify \u00b7 About the author \u203a</div>';
+    f.onclick=function(){if(window.tfGo)window.tfGo('about');};
     host.appendChild(f);
   }
   new MutationObserver(function(){ if(!document.querySelector('.tf-credit')) mount(); })
     .observe(document.body,{childList:true,subtree:true});
-  setInterval(mount,1000);
   mount();
 })();
 
 /* ---------- 4. LOGO CLICK -> HOME ---------- */
 (function(){
   function goHome(){
+    if(typeof window.tfGo==='function'){try{window.tfGo('home');return;}catch(e){}}
     var b=document.querySelector('[data-page="home"],[data-nav="home"],[data-route="home"],#navHome,.nav-home');
     if(b){b.click();return;}
     b=[...document.querySelectorAll('button,a,.nav-item,.tab')]
@@ -1366,355 +1670,81 @@ html[data-theme="dark"] .tf-credit .n{background:linear-gradient(92deg,#7cb2f7,#
     if(l.closest('.tf-ov'))return;
     e.preventDefault();e.stopPropagation();goHome();
   },true);
-  setInterval(function(){
-    document.querySelectorAll('.logo,.brand,#logo,#brand,.app-logo').forEach(function(l){
-      l.style.cursor='pointer';l.title='Go to Home';
-    });
-  },1500);
 })();
 
-/* ---------- 5. AUTO-SPLIT PDF ON UPLOAD (no extra download) ---------- */
-(function(){
-  var PDFJS='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs';
-  var JSPDF='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
-  function load(src){return new Promise((r,j)=>{var s=document.createElement('script');
-    s.src=src;s.onload=r;s.onerror=j;document.head.appendChild(s);});}
-
-  function prog(){
-    var d=document.createElement('div');d.className='tf-prog';
-    d.innerHTML='<div id="tfPt">Preparing…</div><div class="bar"><i id="tfPb"></i></div>'+
-      '<div style="font-size:12px;opacity:.7">Har question ko alag page par kaata ja raha hai</div>';
-    document.body.appendChild(d);
-    return {set:function(t,p){d.querySelector('#tfPt').textContent=t;
-      d.querySelector('#tfPb').style.width=(p*100)+'%';},done:function(){d.remove();}};
-  }
-  function trim(cv){
-    var c=cv.getContext('2d',{willReadFrequently:true});
-    var d=c.getImageData(0,0,cv.width,cv.height).data;
-    var top=0,bot=cv.height-1,left=0,right=cv.width-1;
-    function rb(y){for(var x=0;x<cv.width;x+=3){var i=(y*cv.width+x)*4;
-      if(d[i]<245||d[i+1]<245||d[i+2]<245)return false;}return true;}
-    function cb(x){for(var y=0;y<cv.height;y+=3){var i=(y*cv.width+x)*4;
-      if(d[i]<245||d[i+1]<245||d[i+2]<245)return false;}return true;}
-    while(top<bot&&rb(top))top++;while(bot>top&&rb(bot))bot--;
-    while(left<right&&cb(left))left++;while(right>left&&cb(right))right--;
-    var pad=18,x=Math.max(0,left-pad),y=Math.max(0,top-pad);
-    var w=Math.min(cv.width-x,right-left+pad*2),h=Math.min(cv.height-y,bot-top+pad*2);
-    if(w<20||h<20)return cv;
-    var o=document.createElement('canvas');o.width=w;o.height=h;
-    var oc=o.getContext('2d');oc.fillStyle='#fff';oc.fillRect(0,0,w,h);
-    oc.drawImage(cv,x,y,w,h,0,0,w,h);return o;
-  }
-  function stitch(parts){
-    var w=Math.max.apply(null,parts.map(p=>p.cv.width));
-    var h=parts.reduce((s,p)=>s+p.h,0)+24;
-    var o=document.createElement('canvas');o.width=w;o.height=h;
-    var c=o.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,w,h);
-    var y=12;parts.forEach(p=>{c.drawImage(p.cv,0,p.y,p.cv.width,p.h,0,y,p.cv.width,p.h);y+=p.h;});
-    return o;
-  }
-  async function splitFile(file){
-    var P=prog();
-    try{
-      P.set('Engine load ho raha hai…',.03);
-      var pdfjs=await import(PDFJS);
-      pdfjs.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs';
-      var pdf=await pdfjs.getDocument({data:await file.arrayBuffer()}).promise;
-      var shots=[],cur=[],expect=1,started=false,scale=2.2;
-      function flush(){if(!cur.length)return;var cv=trim(stitch(cur));
-        if(cv.height>60)shots.push(cv.toDataURL('image/jpeg',.86));cur=[];}
-      for(var p=1;p<=pdf.numPages;p++){
-        P.set('Page '+p+'/'+pdf.numPages+' — questions: '+shots.length, p/pdf.numPages*.75);
-        var page=await pdf.getPage(p),vp=page.getViewport({scale});
-        var cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
-        var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
-        await page.render({canvasContext:ctx,viewport:vp}).promise;
-        var tc=await page.getTextContent(),marks=[];
-        tc.items.forEach(function(it){
-          var s=(it.str||'').trim();
-          var m=s.match(/^(?:Q\s*\.?\s*|Question\s*)?(\d{1,3})\s*[.)\]]/i);
-          if(!m)return;
-          var n=parseInt(m[1],10);
-          var tr=pdfjs.Util.transform(vp.transform,it.transform);
-          var x=tr[4],y=tr[5]-Math.abs(tr[3]);
-          if(x>vp.width*0.45)return;
-          if(n!==expect)return;
-          marks.push({y:Math.max(0,y-10)});expect++;
-        });
-        marks.sort((a,b)=>a.y-b.y);
-        if(!marks.length){cur.push({cv:cv,y:0,h:cv.height});continue;}
-        if(marks[0].y>30&&started)cur.push({cv:cv,y:0,h:marks[0].y});
-        flush();started=true;
-        for(var i=0;i<marks.length;i++){
-          var end=i<marks.length-1?marks[i+1].y:cv.height;
-          cur=[{cv:cv,y:marks[i].y,h:end-marks[i].y}];
-          if(i<marks.length-1)flush();
-        }
-      }
-      flush();
-      if(shots.length<2){P.done();return null;}
-      P.set('Naya PDF ban raha hai…',.85);
-      if(!window.jspdf)await load(JSPDF);
-      var jsPDF=window.jspdf.jsPDF,doc=null;
-      for(var k=0;k<shots.length;k++){
-        var img=new Image();img.src=shots[k];await img.decode();
-        var W=img.naturalWidth,H=img.naturalHeight;
-        if(!doc)doc=new jsPDF({unit:'px',format:[W,H],orientation:W>H?'l':'p'});
-        else doc.addPage([W,H],W>H?'l':'p');
-        doc.addImage(shots[k],'JPEG',0,0,W,H);
-        P.set('PDF '+(k+1)+'/'+shots.length,.85+.15*(k/shots.length));
-      }
-      P.done();
-      var blob=doc.output('blob');
-      return new File([blob],file.name.replace(/\.pdf$/i,'')+'-split.pdf',{type:'application/pdf'});
-    }catch(err){P.done();console.warn('split failed',err);return null;}
-  }
-  window.tfAutoSplit=true;   // band karna ho to console me: tfAutoSplit=false
-
-  document.addEventListener('change',function(e){
-    var inp=e.target;
-    if(!inp||inp.tagName!=='INPUT'||inp.type!=='file')return;
-    if(!window.tfAutoSplit)return;
-    if(inp.dataset.tfDone==='1'){inp.dataset.tfDone='';return;}
-    var f=inp.files&&inp.files[0];
-    if(!f||!/pdf/i.test(f.type+f.name))return;
-    var ctx=((inp.id||'')+' '+(inp.name||'')+' '+(inp.closest('label')?inp.closest('label').textContent:'')+' '+
-      (inp.parentElement?inp.parentElement.textContent.slice(0,80):'')).toLowerCase();
-    if(/key|answer|omr|solution|response/.test(ctx))return;   // answer key ko chhodo
-    e.preventDefault();e.stopImmediatePropagation();
-    splitFile(f).then(function(nf){
-      var dt=new DataTransfer();dt.items.add(nf||f);
-      inp.files=dt.files;inp.dataset.tfDone='1';
-      inp.dispatchEvent(new Event('change',{bubbles:true}));
-    });
-  },true);
-})();
-
-/* ---------- 6. SCIENTIFIC CALCULATOR (NTA style) ---------- */
-(function(){
-  var deg=true,expr='',ans=0;
-  function fact(n){n=Math.round(n);if(n<0||n>170)return NaN;var r=1;for(var i=2;i<=n;i++)r*=i;return r;}
-  var T={sin:x=>Math.sin(deg?x*Math.PI/180:x),cos:x=>Math.cos(deg?x*Math.PI/180:x),
-    tan:x=>Math.tan(deg?x*Math.PI/180:x),asin:x=>deg?Math.asin(x)*180/Math.PI:Math.asin(x),
-    acos:x=>deg?Math.acos(x)*180/Math.PI:Math.acos(x),atan:x=>deg?Math.atan(x)*180/Math.PI:Math.atan(x)};
-  function evl(s){
-    s=s.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/π/g,'(Math.PI)')
-       .replace(/%/g,'/100').replace(/\^/g,'**');
-    s=s.replace(/(\d+(?:\.\d+)?)!/g,'fact($1)');
-    s=s.replace(/\b(asin|acos|atan|sin|cos|tan)\(/g,'T.$1(')
-       .replace(/\blog\(/g,'Math.log10(').replace(/\bln\(/g,'Math.log(')
-       .replace(/√\(/g,'Math.sqrt(').replace(/\babs\(/g,'Math.abs(')
-       .replace(/\bexp\(/g,'Math.exp(').replace(/\bAns\b/g,'('+ans+')')
-       .replace(/\be\b/g,'(Math.E)');
-    if(/[^0-9+\-*/().,\s A-Za-z_$]/.test(s))throw 0;
-    return Function('T','fact','"use strict";return ('+s+')')(T,fact);
-  }
-  var box=document.createElement('div');
-  box.className='tf-ov';box.id='tfCalc';box.style.display='none';
-  box.innerHTML='<div class="tf-box" style="width:min(340px,100%)">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
-    '<b>Calculator</b><button class="tf-b" id="tfDeg" style="padding:5px 10px;font-size:12px">DEG</button></div>'+
-    '<div class="scr"><div class="e" id="tfE"></div><div class="r" id="tfR">0</div></div>'+
-    '<div class="k">'+
-    ['sin','cos','tan','log','ln','asin','acos','atan','√(','π',
-     '7','8','9','÷','^','4','5','6','×','!',
-     '1','2','3','−','(','0','.','Ans','+',')',
-     'C','⌫','%','e','='].map(function(k){
-      var cls=/[÷×−+^!%()√πe]|sin|cos|tan|log|ln|asin|acos|atan/.test(k)?'op':'';
-      if(k==='=')cls='eq';
-      return '<button class="'+cls+'" data-k="'+k+'">'+k+'</button>';}).join('')+
-    '</div><button class="tf-b" id="tfCClose" style="width:100%;margin-top:10px">Close</button></div>';
-  document.body.appendChild(box);
-  var E=box.querySelector('#tfE'),R=box.querySelector('#tfR');
-  function show(){E.textContent=expr;try{var v=evl(expr||'0');
-    R.textContent=(typeof v==='number'&&isFinite(v))?(+v.toPrecision(12)):'';}catch(e){R.textContent='';}}
-  box.addEventListener('click',function(e){
-    var b=e.target.closest('button[data-k]');if(!b)return;
-    var k=b.dataset.k;
-    if(k==='C'){expr='';}
-    else if(k==='⌫'){expr=expr.slice(0,-1);}
-    else if(k==='='){try{var v=evl(expr);ans=v;R.textContent=+v.toPrecision(12);expr=String(+v.toPrecision(12));E.textContent='';return;}
-      catch(err){R.textContent='Error';return;}}
-    else if(/^(sin|cos|tan|asin|acos|atan|log|ln)$/.test(k)){expr+=k+'(';}
-    else expr+=k;
-    show();
-  });
-  box.querySelector('#tfDeg').onclick=function(){deg=!deg;this.textContent=deg?'DEG':'RAD';show();};
-  box.querySelector('#tfCClose').onclick=()=>box.style.display='none';
-  box.addEventListener('mousedown',e=>{if(e.target===box)box.style.display='none';});
-  document.addEventListener('keydown',function(e){
-    if(box.style.display==='none')return;
-    if(/^[0-9.+\-*/()^%]$/.test(e.key)){expr+=e.key.replace('*','×').replace('/','÷');show();e.preventDefault();}
-    else if(e.key==='Enter'){box.querySelector('[data-k="="]').click();e.preventDefault();}
-    else if(e.key==='Backspace'){expr=expr.slice(0,-1);show();e.preventDefault();}
-  });
-  window.tfOpenCalc=function(){box.style.display='flex';show();};
-  document.addEventListener('click',function(e){
-    var b=e.target.closest('button,a,div[role="button"],.icon-btn');
-    if(!b||b.closest('#tfCalc'))return;
-    var t=((b.getAttribute('aria-label')||'')+' '+(b.title||'')+' '+(b.id||'')+' '+b.textContent).toLowerCase();
-    if(/calculat|🖩|calc\b/.test(t)&&b.textContent.length<30){
-      e.preventDefault();e.stopImmediatePropagation();window.tfOpenCalc();}
-  },true);
-  setTimeout(function(){
-    var f=document.createElement('button');f.className='tf-calc-fab';f.title='Calculator';f.textContent='🖩';
-    f.onclick=e=>{e.stopPropagation();window.tfOpenCalc();};
-    document.body.appendChild(f);
-  },1200);
-})();
-
-/* ---------- 7. PROFILE FIX + PHOTO PERSIST ---------- */
-(function(){
-  var K='tf_profile';
-  function get(){try{return JSON.parse(localStorage.getItem(K)||'{}');}catch(e){return {};}}
-  function set(p){localStorage.setItem(K,JSON.stringify(p));paint();}
-  window.tfProfile=get;
-  function paint(){
-    var p=get();
-    if(p.photo)document.querySelectorAll('img.avatar,img#avatar,img[data-avatar],.profile-pic img,#profilePic')
-      .forEach(i=>i.src=p.photo);
-    document.querySelectorAll('[data-bind="name"],#profileName,.profile-name')
-      .forEach(el=>{if(p.name)el.textContent=p.name;});
-  }
-  // koi bhi image input -> photo save
-  document.addEventListener('change',function(e){
-    var i=e.target;
-    if(!i||i.tagName!=='INPUT'||i.type!=='file')return;
-    if(!/image/i.test(i.accept||'')&&!/photo|avatar|pic|image/i.test((i.id||'')+(i.name||'')))return;
-    var f=i.files&&i.files[0];if(!f)return;
-    var r=new FileReader();
-    r.onload=function(){
-      var img=new Image();
-      img.onload=function(){
-        var s=256,c=document.createElement('canvas');c.width=c.height=s;
-        var ctx=c.getContext('2d');
-        var m=Math.min(img.width,img.height);
-        ctx.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);
-        var p=get();p.photo=c.toDataURL('image/jpeg',.85);set(p);
-      };
-      img.src=r.result;
-    };
-    r.readAsDataURL(f);
-  });
-  setInterval(paint,1500);paint();
-
-  // fallback profile editor
-  window.tfEditProfile=function(){
-    var p=get();
-    var ov=document.createElement('div');ov.className='tf-ov';
-    ov.innerHTML='<div class="tf-box" style="width:min(420px,100%)">'+
-      '<button class="tf-x">✕</button><h3 style="margin:0 0 12px">Candidate Profile</h3>'+
-      '<div style="text-align:center;margin-bottom:12px">'+
-      '<img id="tfPh" src="'+(p.photo||'')+'" style="width:96px;height:96px;border-radius:50%;object-fit:cover;'+
-      'border:2px solid var(--line);background:var(--brand-soft)"><br>'+
-      '<label class="tf-b" style="display:inline-block;margin-top:8px;font-size:13px">Change photo'+
-      '<input type="file" accept="image/*" id="tfPhIn" hidden></label></div>'+
-      '<input class="tf-in" id="tfN" placeholder="Full name" value="'+(p.name||'')+'">'+
-      '<input class="tf-in" id="tfRo" placeholder="Roll number" value="'+(p.roll||'')+'">'+
-      '<input class="tf-in" id="tfEm" placeholder="Email" value="'+(p.email||'')+'">'+
-      '<input class="tf-in" id="tfPhn" placeholder="Mobile" value="'+(p.phone||'')+'">'+
-      '<button class="tf-b p" id="tfSv" style="width:100%">Save profile</button></div>';
-    document.body.appendChild(ov);
-    var close=()=>ov.remove();
-    ov.querySelector('.tf-x').onclick=close;
-    ov.addEventListener('mousedown',e=>{if(e.target===ov)close();});
-    ov.querySelector('#tfPhIn').onchange=function(){
-      var f=this.files[0];if(!f)return;var r=new FileReader();
-      r.onload=()=>{ov.querySelector('#tfPh').src=r.result;};r.readAsDataURL(f);
-    };
-    ov.querySelector('#tfSv').onclick=function(){
-      var np=get();
-      np.name=ov.querySelector('#tfN').value.trim();
-      np.roll=ov.querySelector('#tfRo').value.trim();
-      np.email=ov.querySelector('#tfEm').value.trim();
-      np.phone=ov.querySelector('#tfPhn').value.trim();
-      var src=ov.querySelector('#tfPh').src;if(src&&src.startsWith('data:'))np.photo=src;
-      set(np);close();
-    };
-  };
-  // agar app ka profile modal khaali/atka ho to 900ms baad apna kholo
-  document.addEventListener('click',function(e){
-    var b=e.target.closest('button,a,.nav-item,.tab,div[role="button"]');if(!b)return;
-    var t=((b.getAttribute('aria-label')||'')+' '+(b.id||'')+' '+b.textContent).toLowerCase();
-    if(!/edit profile|candidate profile|my profile/.test(t))return;
-    setTimeout(function(){
-      var ok=[...document.querySelectorAll('.modal,.dialog,[role="dialog"],.sheet')]
-        .some(m=>m.offsetHeight>120&&m.querySelector('input'));
-      if(!ok)window.tfEditProfile();
-    },900);
-  });
-})();
-
-/* ---------- 8. HISTORY DELETE FIX ---------- */
-(function(){
-  function wipeLS(id){
-    Object.keys(localStorage).forEach(function(k){
-      if(!/attempt|result|history|score|report/i.test(k))return;
-      try{
-        var v=JSON.parse(localStorage.getItem(k));
-        if(Array.isArray(v)){
-          var n=v.filter(x=>String(x&&(x.id||x.attemptId||x.uid))!==String(id));
-          if(n.length!==v.length)localStorage.setItem(k,JSON.stringify(n));
-        }else if(v&&typeof v==='object'&&v[id]){delete v[id];localStorage.setItem(k,JSON.stringify(v));}
-      }catch(e){}
-    });
-  }
-  async function wipeIDB(id){
-    if(!indexedDB.databases)return;
-    var dbs=await indexedDB.databases();
-    for(const d of dbs){
-      if(!d.name)continue;
-      await new Promise(res=>{
-        var rq=indexedDB.open(d.name);
-        rq.onsuccess=function(){
-          var db=rq.result;
-          var names=[...db.objectStoreNames].filter(n=>/attempt|result|history/i.test(n));
-          if(!names.length){db.close();return res();}
-          var tx=db.transaction(names,'readwrite');
-          names.forEach(n=>{try{tx.objectStore(n).delete(id);
-            tx.objectStore(n).delete(Number(id));}catch(e){}});
-          tx.oncomplete=()=>{db.close();res();};
-          tx.onerror=()=>{db.close();res();};
-        };
-        rq.onerror=()=>res();
-      });
-    }
-  }
-  document.addEventListener('click',function(e){
-    var b=e.target.closest('button,a,.icon-btn,[data-del],[data-delete]');
-    if(!b)return;
-    var t=((b.getAttribute('aria-label')||'')+' '+(b.title||'')+' '+b.textContent).toLowerCase();
-    var isDel=b.hasAttribute('data-del')||b.hasAttribute('data-delete')||
-      (/delete|remove|🗑|✕ *attempt/.test(t)&&b.textContent.length<20);
-    if(!isDel)return;
-    var row=b.closest('[data-id],[data-attempt-id],[data-attempt],li,tr,.card,.item,.history-item');
-    var id=b.dataset.id||b.dataset.del||b.dataset.delete||
-      (row&&(row.dataset.id||row.dataset.attemptId||row.dataset.attempt));
-    if(!id)return;
-    if(!confirm('Is attempt ko delete karna hai? Ye wapas nahi aayega.'))
-      {e.preventDefault();e.stopImmediatePropagation();return;}
-    e.preventDefault();e.stopImmediatePropagation();
-    if(row)row.style.opacity='.35';
-    wipeLS(id);
-    wipeIDB(id).then(function(){setTimeout(()=>location.reload(),250);});
-  },true);
-})();
 </script>
 <!-- ============ TESTIFY ACCOUNT (Supabase) ============ -->
 <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 const SUPABASE_URL = 'https://mkvdnskmlnvwcxsfitwu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_lMKpgu2qRpM9EgJv7gUT3A_lrCEXjod';
+/* If your ISP blocks supabase.co, deploy supabase-proxy-worker.js on Cloudflare and put its URL here
+   (or paste it once from the sign-in screen: "Connection fix"). Leave empty to connect directly. */
+const SUPABASE_PROXY_URL = '';
+const SB_BASE = (localStorage.getItem('tf_sb_proxy')||SUPABASE_PROXY_URL||SUPABASE_URL).replace(/\/+$/,'');
 
-
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+/* Built-in sign-in client: talks to Supabase's HTTP API directly, so no CDN library is needed to sign in. */
+function makeClient(base,key,ref){
+  const SK='sb-'+ref+'-auth-token',listeners=new Set();       // same storage key/format as before: existing sessions keep working
+  const hdr=(tok,extra)=>Object.assign({apikey:key,'Content-Type':'application/json'},tok?{Authorization:'Bearer '+tok}:{},extra||{});
+  const apiErr=(status,j,fb)=>{const e=new Error((j&&(j.msg||j.message||j.error_description||j.error))||fb||('HTTP '+status));
+    e.name='AuthApiError';e.status=status;e.code=(j&&(j.error_code||j.code))||'';return e;};
+  const netErr=e=>{const x=new Error(e&&e.name==='AbortError'?'Request timed out':'Failed to fetch');x.name='AuthRetryableFetchError';x.status=0;return x;};
+  async function http(method,path,o={}){
+    const ac=new AbortController(),t=setTimeout(()=>ac.abort(),o.timeout||20000);let res;
+    try{res=await fetch(base+path,{method,headers:hdr(o.tok,o.headers),body:o.body===undefined?undefined:JSON.stringify(o.body),signal:ac.signal,cache:'no-store'});}
+    catch(e){throw netErr(e);}finally{clearTimeout(t);}
+    const txt=await res.text();let j=null;try{j=txt?JSON.parse(txt):null;}catch(e){}
+    if(!res.ok)throw apiErr(res.status,j,txt.slice(0,200));
+    return j;}
+  const load=()=>{try{return JSON.parse(localStorage.getItem(SK)||'null');}catch(e){return null;}};
+  const save=s=>{try{localStorage.setItem(SK,JSON.stringify(s));}catch(e){}};
+  const now=()=>Math.floor(Date.now()/1000);
+  const norm=r=>({access_token:r.access_token,refresh_token:r.refresh_token,token_type:r.token_type||'bearer',expires_in:r.expires_in,
+    expires_at:r.expires_at||now()+(r.expires_in||3600),user:r.user});
+  const emit=(ev,s)=>listeners.forEach(f=>{try{f(ev,s);}catch(e){console.error(e);}});
+  let refreshing=null;
+  function refresh(s){
+    if(refreshing)return refreshing;
+    refreshing=(async()=>{try{const n=norm(await http('POST','/auth/v1/token?grant_type=refresh_token',{body:{refresh_token:s.refresh_token}}));save(n);emit('TOKEN_REFRESHED',n);return n;}
+      catch(e){if(e.status>=400&&e.status<500){try{localStorage.removeItem(SK);}catch(x){}emit('SIGNED_OUT',null);return null;}throw e;}
+      finally{refreshing=null;}})();
+    return refreshing;}
+  async function session(){
+    const s=load();if(!s||!s.access_token)return null;
+    if(s.expires_at-now()>60)return s;
+    try{return await refresh(s);}catch(e){return s;}              // offline: keep the stored session instead of signing the user out
+  }
+  const ok=async r=>{const n=norm(r);save(n);emit('SIGNED_IN',n);return{data:{user:n.user,session:n},error:null};};
+  const wrap=async fn=>{try{return await fn();}catch(e){return{data:{user:null,session:null},error:e};}};
+  const auth={
+    signInWithOtp:o=>wrap(async()=>{await http('POST','/auth/v1/otp',{body:{email:o.email,create_user:!(o.options&&o.options.shouldCreateUser===false),data:(o.options&&o.options.data)||{}}});return{data:{user:null,session:null},error:null};}),
+    verifyOtp:o=>wrap(async()=>ok(await http('POST','/auth/v1/verify',{body:{email:o.email,token:o.token,type:o.type||'email'}}))),
+    signInWithPassword:c=>wrap(async()=>ok(await http('POST','/auth/v1/token?grant_type=password',{body:{email:c.email,password:c.password}}))),
+    signUp:c=>wrap(async()=>{const r=await http('POST','/auth/v1/signup',{body:{email:c.email,password:c.password}});
+      if(r&&r.access_token)return ok(r);return{data:{user:(r&&r.user)||r,session:null},error:null};}),
+    signOut:async()=>{const s=load();try{if(s)await http('POST','/auth/v1/logout?scope=local',{tok:s.access_token,timeout:6000});}catch(e){}
+      try{localStorage.removeItem(SK);}catch(e){}emit('SIGNED_OUT',null);return{error:null};},
+    getSession:async()=>({data:{session:await session()},error:null}),
+    getUser:async()=>{const s=await session();return{data:{user:s?s.user:null},error:null};},
+    onAuthStateChange:cb=>{listeners.add(cb);setTimeout(async()=>{try{cb('INITIAL_SESSION',await session());}catch(e){}},0);
+      return{data:{subscription:{unsubscribe:()=>listeners.delete(cb)}}};}
+  };
+  const rest=async(fn)=>{try{const s=await session();if(!s)throw apiErr(401,null,'Not signed in');return await fn(s.access_token);}catch(e){return{data:null,error:e};}};
+  const from=table=>({
+    select:cols=>({eq:(col,val)=>({maybeSingle:()=>rest(async tok=>{
+      const r=await http('GET','/rest/v1/'+table+'?select='+encodeURIComponent(cols)+'&'+encodeURIComponent(col)+'=eq.'+encodeURIComponent(val)+'&limit=1',{tok,timeout:60000});
+      return{data:(r&&r[0])||null,error:null};})})}),
+    upsert:row=>rest(async tok=>{await http('POST','/rest/v1/'+table,{body:row,tok,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},timeout:90000});return{data:null,error:null};})
+  });
+  addEventListener('storage',e=>{if(e.key===SK&&!e.newValue)emit('SIGNED_OUT',null);});   // signed out in another tab
+  return{auth,from};}
+const sb = makeClient(SB_BASE,SUPABASE_KEY,SUPABASE_URL.split('//')[1].split('.')[0]);
 window.sb = sb;
 
 /* ---- poora local data dump / restore ---- */
 async function dumpAll(){
   const ls={};
-  Object.keys(localStorage).forEach(k=>{ if(!/^tf_theme|^theme$/.test(k)) ls[k]=localStorage.getItem(k); });
+  Object.keys(localStorage).forEach(k=>{ if(!/^tf_theme|^theme$|^tf_ai$/.test(k)) ls[k]=localStorage.getItem(k); });
   const idb={};
   if(indexedDB.databases){
     for(const d of await indexedDB.databases()){
@@ -1756,103 +1786,329 @@ async function restoreAll(d){
     });
   }
 }
+/* ---- sync guard: never upload until this device has been checked against the cloud copy ---- */
+let syncReady=false;
+const OTP_LEN=6;   // must match "Email OTP Length" in Supabase -> Authentication -> Providers -> Email
+const OTP_WAIT=60; // seconds before "Resend code" unlocks
+const withTimeout=(p,ms=20000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Request timed out')),ms))]);
+
 window.tfBackupNow=async function(silent){
-  const {data:{user}}=await sb.auth.getUser();
-  if(!user) return;
-  const payload=await dumpAll();
-  await sb.from('backups').upsert({user_id:user.id,data:payload,updated_at:new Date().toISOString()});
-  if(!silent) alert('Cloud par save ho gaya ✔');
+  if(!sb) return;
+  if(!syncReady){ if(!silent) alert('Backup is paused because your cloud data was not loaded. Sign out and sign in again.'); return; }
+  try{
+    const {data:{user}}=await sb.auth.getUser();
+    if(!user) return;
+    const payload=await dumpAll();
+    const {error}=await sb.from('backups').upsert({user_id:user.id,data:payload,updated_at:new Date().toISOString()});
+    if(error) throw error;
+    if(!silent) alert('Backup saved to the cloud.');
+  }catch(e){ if(!silent) alert('Backup failed: '+((e&&e.message)||e)); }
 };
-window.tfRestoreNow=async function(){
-  const {data:{user}}=await sb.auth.getUser();
-  if(!user) return alert('Pehle login karo');
-  const {data}=await sb.from('backups').select('data').eq('user_id',user.id).single();
-  if(!data||!data.data) return alert('Cloud par abhi koi backup nahi hai.');
+async function restoreFromCloud(user){
+  const {data,error}=await withTimeout(sb.from('backups').select('data').eq('user_id',user.id).maybeSingle(),25000);
+  if(error) throw error;
+  if(!data||!data.data) return 'none';
   await restoreAll(data.data);
-  alert('Data restore ho gaya. App reload ho rahi hai.');
-  location.reload();
+  return 'restored';
+}
+window.tfRestoreNow=async function(){
+  if(!sb) return alert('Sign-in service is not available.');
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user) return alert('Please sign in first.');
+  try{
+    const r=await restoreFromCloud(user);
+    if(r==='none') return alert('No cloud backup found yet.');
+    syncReady=true; alert('Data restored. Reloading\u2026'); location.reload();
+  }catch(e){ alert('Restore failed: '+((e&&e.message)||e)); }
 };
 
-/* ---- login UI ---- */
-function authUI(){
+/* ---- error handling ---- */
+function errKind(e){
+  const m=String((e&&e.message)||e||'').toLowerCase(), c=String((e&&e.code)||'').toLowerCase(), n=String((e&&e.name)||'').toLowerCase();
+  if(n.includes('retryablefetch')||m.includes('failed to fetch')||m.includes('networkerror')||m.includes('network request failed')||m.includes('load failed')||m.includes('timed out')||m.includes('abort'))return 'net';
+  if(m.includes('only request this after')||c==='over_email_send_rate_limit'||c==='over_request_rate_limit'||m.includes('rate limit'))return 'rate';
+  if(c==='otp_expired'||(m.includes('token')&&(m.includes('expired')||m.includes('invalid'))))return 'code';
+  return 'other';
+}
+function niceErr(e){
+  const m=String((e&&e.message)||e||'').toLowerCase(), k=errKind(e);
+  if(k==='rate') return 'Too many attempts. Please wait a minute and try again.';
+  if(k==='code') return 'That code is incorrect or has expired. Use the newest email, or request a new code.';
+  if(m.includes('invalid login')) return 'The email or password is incorrect.';
+  if(m.includes('not confirmed')) return 'Please confirm your email address first \u2014 open the link we sent you.';
+  if(m.includes('already registered')) return 'An account with this email already exists. Please sign in instead.';
+  if(m.includes('at least')) return 'Your password must be at least 6 characters.';
+  return String((e&&e.message)||e||'Something went wrong. Please try again.');
+}
+async function reachable(){            // is the sign-in server reachable from this device right now?
+  try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),7000);
+    const r=await fetch(SB_BASE+'/auth/v1/health',{headers:{apikey:SUPABASE_KEY},cache:'no-store',signal:ac.signal});clearTimeout(t);return r.status<500;}
+  catch(e){return false;}
+}
+
+/* ---- sign-in screen ---- */
+let gateOpen=false;
+const LOCK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+function showGate(){
+  return new Promise(resolve=>{
+    if(gateOpen) return;
+    gateOpen=true; window.__tfGate=1;
+    document.documentElement.classList.add('tf-lock');
+    const g=document.createElement('div'); g.className='tf-gate';
+    g.innerHTML=`<aside class="gx-side">
+        <div class="gx-brand"><div class="gx-mark">T</div><div class="gx-name">TesTify</div></div>
+        <div class="gx-hero"><h1>Practice like it is <em>exam day</em>.</h1>
+          <p>Computer-based mock tests for JEE with the real exam interface and clear, question-level analysis.</p>
+          <ul class="gx-feat">
+            <li><i></i><span>Authentic CBT interface with question palette, timer and sections</span></li>
+            <li><i></i><span>Accuracy, time and mistake analysis for every attempt</span></li>
+            <li><i></i><span>Tests and results backed up and synced across your devices</span></li>
+          </ul></div>
+        <div class="gx-foot">\u00a9 ${new Date().getFullYear()} TesTify \u00b7 Crafted by Sarthak Nainwal</div>
+      </aside>
+      <main class="gx-main"><div class="gx-form" id="gxForm"></div></main>`;
+    document.body.appendChild(g);
+    const F=g.querySelector('#gxForm'),$g=s=>F.querySelector(s);
+    let busy=false,email='',tmr=null,left=0,view='email';
+    const okEm=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+    const esc2=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    function note(kind,html,actions){const a=$g('.gx-alert');if(!a)return;a.className='gx-alert'+(kind?' show '+kind:'');a.innerHTML=html||'';
+      if(actions&&actions.length){const d=document.createElement('div');d.className='gx-act';actions.forEach(([t,fn])=>{const b=document.createElement('button');b.className='gx-link';b.textContent=t;b.onclick=fn;d.appendChild(b);});a.appendChild(d);}}
+    function done(){clearInterval(tmr);g.remove();gateOpen=false;document.documentElement.classList.remove('tf-lock');showChip();resolve();}
+    function goOffline(){sessionStorage.setItem('tf_offline','1');syncReady=false;done();}
+    async function netProblem(){
+      note('err','Checking your connection\u2026');
+      const ok=sb?await reachable():false;
+      if(sb&&ok) return note('ok','The connection looks fine now. Please try again.');
+      note('err','<b>We could not reach the sign-in server.</b> Your device may be offline, or your network may be blocking the service. Switching networks (Wi-Fi or mobile data) or changing your DNS often fixes this.',
+        [['Try again',()=>location.reload()],['Connection fix',setProxy],['Continue without signing in',goOffline]]);}
+    function setProxy(){const cur=localStorage.getItem('tf_sb_proxy')||'';const v=prompt('Paste your proxy address (https://\u2026workers.dev). Leave empty to connect directly.',cur);
+      if(v===null)return;const t=v.trim();if(t&&!/^https:\/\/[^\s]+$/.test(t))return note('err','That address must start with https://');
+      if(t)localStorage.setItem('tf_sb_proxy',t);else localStorage.removeItem('tf_sb_proxy');location.reload();}
+    async function run(fn){if(busy)return;busy=true;g.querySelectorAll('button,input').forEach(x=>x.disabled=true);
+      try{await fn();}catch(e){ if(errKind(e)==='net')await netProblem(); else note('err',esc2(niceErr(e))); }
+      finally{busy=false;g.querySelectorAll('button,input').forEach(x=>x.disabled=false);tick();}}
+    function later(fn,n=0){if(!busy)return run(fn);if(n<60)setTimeout(()=>later(fn,n+1),50);}   // auto-submit must never be dropped while a request is finishing
+    function tick(){const b=$g('#gxResend');if(!b)return;b.textContent=left>0?'Resend code in '+left+'s':'Resend code';b.disabled=busy||left>0;}
+    function cooldown(){left=OTP_WAIT;clearInterval(tmr);tick();tmr=setInterval(()=>{left--;tick();if(left<=0)clearInterval(tmr);},1000);}
+
+    async function afterLogin(user){
+      note('', 'Signed in. Restoring your data\u2026');$g('.gx-alert').className='gx-alert show';
+      try{
+        const r=await restoreFromCloud(user);
+        syncReady=true;
+        if(r==='restored'){note('ok','Your data has been restored. Opening TesTify\u2026');setTimeout(()=>location.reload(),450);return;}
+        done();
+      }catch(e){
+        note('err','<b>You are signed in, but your cloud data could not be loaded</b> ('+esc2(niceErr(e))+'). Backups stay paused until it loads, so nothing is overwritten.',
+          [['Try again',()=>run(()=>afterLogin(user))],['Continue anyway',()=>done()]]);}}
+    async function sendCode(){
+      const em=($g('#gxEm')?.value||email).trim().toLowerCase();
+      if(!okEm(em)) return note('err','Please enter a valid email address.');
+      note('','');const {error}=await withTimeout(sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true}}));
+      if(error) throw error;
+      email=em;render('code');cooldown();}
+    async function verify(){
+      const code=[...F.querySelectorAll('.gx-otp input')].map(i=>i.value).join('');
+      if(code.length!==OTP_LEN) return note('err','Enter the '+OTP_LEN+'-digit code from your email.');
+      note('','');const {data,error}=await withTimeout(sb.auth.verifyOtp({email,token:code,type:'email'}));
+      if(error){F.querySelectorAll('.gx-otp input').forEach(i=>i.value='');F.querySelector('.gx-otp input').focus();throw error;}
+      await afterLogin(data.user||(data.session&&data.session.user));}
+
+    function render(v){
+      view=v;
+      if(v==='email')F.innerHTML=`<div class="gx-eyebrow">Welcome</div><h2 class="gx-h">Sign in to TesTify</h2>
+        <p class="gx-p">Enter your email and we will send you a one-time code. No password needed.</p>
+        <div class="gx-alert" role="alert"></div>
+        <div class="gx-field"><label class="gx-lab" for="gxEm">Email address</label><input class="gx-in" id="gxEm" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${esc2(email)}"></div>
+        <button class="gx-btn" id="gxGo">Continue</button>
+        <div class="gx-sep">or</div>
+        <button class="gx-ghost" id="gxPw">Sign in with a password</button>
+        <div class="gx-sec">${LOCK_SVG}<span>Secure sign-in \u00b7 your data stays in your account</span></div>`;
+      if(v==='code')F.innerHTML=`<div class="gx-eyebrow">Verification</div><h2 class="gx-h">Check your email</h2>
+        <p class="gx-p">We sent a ${OTP_LEN}-digit code to <b style="color:var(--text)">${esc2(email)}</b>. It can take a minute to arrive \u2014 check your spam folder too.</p>
+        <div class="gx-alert" role="alert"></div>
+        <div class="gx-otp">${Array.from({length:OTP_LEN},(_,i)=>`<input inputmode="numeric" pattern="[0-9]*" ${i===0?'':'maxlength="1"'} aria-label="Digit ${i+1}" ${i===0?'autocomplete="one-time-code"':'autocomplete="off"'}>`).join('')}</div>
+        <button class="gx-btn" id="gxVer">Verify and continue</button>
+        <div class="gx-row"><button class="gx-link" id="gxResend">Resend code</button><button class="gx-link" id="gxChange">Use a different email</button></div>`;
+      if(v==='pw')F.innerHTML=`<div class="gx-eyebrow">Password</div><h2 class="gx-h">Sign in with a password</h2>
+        <p class="gx-p">Use the email and password you created for TesTify.</p>
+        <div class="gx-alert" role="alert"></div>
+        <div class="gx-field"><label class="gx-lab" for="gxEm">Email address</label><input class="gx-in" id="gxEm" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${esc2(email)}"></div>
+        <div class="gx-field"><label class="gx-lab" for="gxPwd">Password</label><input class="gx-in" id="gxPwd" type="password" autocomplete="current-password" placeholder="At least 6 characters" style="padding-right:78px"><button class="gx-eye gx-link" id="gxEye" type="button">Show</button></div>
+        <button class="gx-btn" id="gxIn">Sign in</button>
+        <div class="gx-row"><button class="gx-link" id="gxUp">Create an account</button><button class="gx-link" id="gxBack">Use email code instead</button></div>`;
+      bind(v);}
+    function bind(v){
+      const em=$g('#gxEm');
+      if(v==='email'){$g('#gxGo').onclick=()=>run(sendCode);em.onkeydown=e=>{if(e.key==='Enter')run(sendCode);};$g('#gxPw').onclick=()=>{email=em.value.trim();render('pw');};setTimeout(()=>em.focus(),60);}
+      if(v==='code'){
+        const box=[...F.querySelectorAll('.gx-otp input')];
+        const fill=t=>{const d=t.replace(/\D/g,'').slice(0,OTP_LEN);d.split('').forEach((c,i)=>box[i].value=c);(box[Math.min(d.length,OTP_LEN-1)]).focus();if(d.length===OTP_LEN)later(verify);};
+        box.forEach((b,i)=>{
+          b.oninput=()=>{const d=b.value.replace(/\D/g,'');if(d.length>1){fill(d);return;}b.value=d;if(d&&i<OTP_LEN-1)box[i+1].focus();if(box.every(x=>x.value))later(verify);};
+          b.onkeydown=e=>{if(e.key==='Backspace'&&!b.value&&i>0){box[i-1].value='';box[i-1].focus();}else if(e.key==='ArrowLeft'&&i>0)box[i-1].focus();else if(e.key==='ArrowRight'&&i<OTP_LEN-1)box[i+1].focus();else if(e.key==='Enter')run(verify);};
+          b.onpaste=e=>{e.preventDefault();fill((e.clipboardData||window.clipboardData).getData('text'));};});
+        $g('#gxVer').onclick=()=>run(verify);$g('#gxResend').onclick=()=>run(sendCode);
+        $g('#gxChange').onclick=()=>{clearInterval(tmr);left=0;render('email');};tick();setTimeout(()=>{if(!box.some(x=>x.value)&&!box.includes(document.activeElement))box[0].focus();},60);}   // never steal focus from digits already being typed
+      if(v==='pw'){
+        const pw=$g('#gxPwd'),creds=()=>{const e=em.value.trim().toLowerCase(),p=pw.value;
+          if(!okEm(e)){note('err','Please enter a valid email address.');return null;}
+          if(p.length<6){note('err','Your password must be at least 6 characters.');return null;}return{email:e,password:p};};
+        $g('#gxEye').onclick=()=>{const h=pw.type==='password';pw.type=h?'text':'password';$g('#gxEye').textContent=h?'Hide':'Show';};
+        $g('#gxIn').onclick=()=>run(async()=>{const c=creds();if(!c)return;note('','');
+          const {data,error}=await withTimeout(sb.auth.signInWithPassword(c));if(error)throw error;await afterLogin(data.user);});
+        $g('#gxUp').onclick=()=>run(async()=>{const c=creds();if(!c)return;note('','');
+          const {data,error}=await withTimeout(sb.auth.signUp(c));if(error)throw error;
+          if(data.session)return afterLogin(data.user);
+          note('ok','Account created. Open the confirmation link we emailed you, then sign in.');});
+        pw.onkeydown=em.onkeydown=e=>{if(e.key==='Enter')$g('#gxIn').click();};
+        $g('#gxBack').onclick=()=>{email=em.value.trim();render('email');};setTimeout(()=>(em.value?pw:em).focus(),60);}
+    }
+    render('email');
+    if(!sb)netProblem();
+  });
+}
+
+/* ---- account chip (backup / sign out; offers sign-in again only if you skipped it) ---- */
+const chip=document.createElement('button');
+chip.className='tf-b tf-acct';
+chip.style.cssText='display:none;position:fixed;left:14px;bottom:calc(14px + var(--safe-b));z-index:99990;font-size:12.5px;border-radius:999px';
+document.body.appendChild(chip);
+let chipUser=null;
+function showChip(){
+  if(gateOpen)return;
+  if(chipUser){chip.textContent='\u2601\ufe0f '+chipUser.email.split('@')[0];chip.style.display='';}
+  else if(sessionStorage.getItem('tf_offline')==='1'){chip.textContent='Sync is off \u00b7 Sign in';chip.style.display='';}
+  else chip.style.display='none';}
+chip.onclick=()=>{
+  if(!chipUser){sessionStorage.removeItem('tf_offline');chip.style.display='none';showGate();return;}
   const ov=document.createElement('div');ov.className='tf-ov';
-  ov.innerHTML=`<div class="tf-box" style="width:min(400px,100%)">
-    <button class="tf-x">✕</button>
-    <h3 style="margin:0 0 4px">Testify Account</h3>
-    <p style="margin:0 0 14px;color:var(--muted);font-size:13px">Login karne par tumhara poora data
-      har device par wapas mil jayega.</p>
-    <div style="display:flex;gap:6px;margin-bottom:12px">
-      <button class="tf-b" data-tab="pw" style="flex:1">Password</button>
-      <button class="tf-b" data-tab="otp" style="flex:1">OTP</button>
-    </div>
-    <div id="paneP">
-      <input class="tf-in" id="aEm" type="email" placeholder="Email">
-      <input class="tf-in" id="aPw" type="password" placeholder="Password (min 6)">
-      <div style="display:flex;gap:8px">
-        <button class="tf-b p" id="aIn" style="flex:1">Login</button>
-        <button class="tf-b" id="aUp" style="flex:1">Sign up</button>
-      </div>
-    </div>
-    <div id="paneO" style="display:none">
-      <input class="tf-in" id="oEm" type="email" placeholder="Email (OTP yahan aayega)">
-      <button class="tf-b p" id="oSend" style="width:100%">Send OTP</button>
-      <input class="tf-in" id="oCode" placeholder="6-digit code" style="margin-top:10px">
-      <button class="tf-b" id="oVer" style="width:100%">Verify &amp; login</button>
-    </div>
-    <div id="aMsg" style="margin-top:12px;font-size:12.5px;color:var(--muted)"></div>
-  </div>`;
+  ov.innerHTML='<div class="tf-box" style="width:min(360px,100%)"><button class="tf-x">\u2715</button><h3 style="margin:0 0 4px">Account</h3><p class="em" style="margin:0 0 14px;color:var(--muted);font-size:13px"></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="tf-b p" id="mBk">Back up now</button><button class="tf-b" id="mOut">Sign out</button></div></div>';
+  ov.querySelector('.em').textContent=chipUser.email;
   document.body.appendChild(ov);
-  const q=s=>ov.querySelector(s), msg=t=>q('#aMsg').textContent=t;
   ov.querySelector('.tf-x').onclick=()=>ov.remove();
   ov.addEventListener('mousedown',e=>{if(e.target===ov)ov.remove();});
-  ov.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
-    q('#paneP').style.display=b.dataset.tab==='pw'?'':'none';
-    q('#paneO').style.display=b.dataset.tab==='otp'?'':'none';
-  });
-  q('#aUp').onclick=async()=>{
-    msg('Account ban raha hai…');
-    const {error}=await sb.auth.signUp({email:q('#aEm').value.trim(),password:q('#aPw').value});
-    msg(error?('❌ '+error.message):'✔ Email par confirm link gaya hai. Confirm karke login karo.');
-  };
-  q('#aIn').onclick=async()=>{
-    msg('Login ho raha hai…');
-    const {error}=await sb.auth.signInWithPassword({email:q('#aEm').value.trim(),password:q('#aPw').value});
-    if(error) return msg('❌ '+error.message);
-    msg('✔ Login ho gaya. Data restore kar rahe hain…');
-    await window.tfRestoreNow();
-  };
-  q('#oSend').onclick=async()=>{
-    msg('OTP bhej rahe hain…');
-    const {error}=await sb.auth.signInWithOtp({email:q('#oEm').value.trim()});
-    msg(error?('❌ '+error.message):'✔ Email check karo, 6-digit code aaya hoga.');
-  };
-  q('#oVer').onclick=async()=>{
-    msg('Verify ho raha hai…');
-    const {error}=await sb.auth.verifyOtp({email:q('#oEm').value.trim(),token:q('#oCode').value.trim(),type:'email'});
-    if(error) return msg('❌ '+error.message);
-    msg('✔ Login ho gaya. Data restore kar rahe hain…');
-    await window.tfRestoreNow();
-  };
-}
-window.tfAuth=authUI;
-
-/* account chip + auto backup */
-const chip=document.createElement('button');
-chip.className='tf-b';
-chip.style.cssText='position:fixed;left:14px;bottom:calc(14px + var(--safe-b));z-index:99990;font-size:12.5px;border-radius:999px';
-chip.textContent='👤 Login';
-chip.onclick=async()=>{
-  const {data:{user}}=await sb.auth.getUser();
-  if(!user) return authUI();
-  if(confirm('Logged in as '+user.email+'\n\nOK = cloud par backup\nCancel = logout')) window.tfBackupNow();
-  else { await sb.auth.signOut(); chip.textContent='👤 Login'; }
+  ov.querySelector('#mBk').onclick=async()=>{await window.tfBackupNow(false);ov.remove();};
+  ov.querySelector('#mOut').onclick=async()=>{await window.tfBackupNow(true);await sb.auth.signOut();ov.remove();};
 };
-document.body.appendChild(chip);
-sb.auth.onAuthStateChange((_e,s)=>{ chip.textContent = s&&s.user ? '☁️ '+s.user.email.split('@')[0] : '👤 Login'; });
-setInterval(()=>window.tfBackupNow(true), 120000);      // har 2 min auto-backup
+
+if(sb)sb.auth.onAuthStateChange((event,session)=>{
+  chipUser=session&&session.user?session.user:null;
+  if(chipUser){showChip();return;}
+  chip.style.display='none';
+  if(event==='SIGNED_OUT'){syncReady=false;setTimeout(showGate,0);}
+});
+setInterval(()=>window.tfBackupNow(true), 120000);      // auto-backup every 2 min (only once sync is ready)
 window.addEventListener('beforeunload',()=>window.tfBackupNow(true));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')window.tfBackupNow(true);});
+
+/* ---- first-open check ---- */
+(async()=>{
+  const stored=()=>Object.keys(localStorage).some(k=>/^sb-.+-auth-token$/.test(k));
+  let s=null;
+  if(sb)try{s=(await withTimeout(sb.auth.getSession(),8000)).data.session;}catch(e){}
+  if(s||(sb&&stored()&&!navigator.onLine)){
+    chipUser=s?s.user:null;syncReady=!!s;
+    document.documentElement.classList.remove('tf-lock');showChip();
+  }else if(sessionStorage.getItem('tf_offline')==='1'){
+    document.documentElement.classList.remove('tf-lock');showChip();
+  }else{ await showGate(); }
+})();
 </script>
 
 
+<style id="tf-lux">
+.logo,.brand,#logo,.app-logo{cursor:pointer}
+h1{color:var(--text)}
+.tcard .row{flex-wrap:nowrap;gap:8px}.tcard .row .btn.sm{flex:0 0 auto;padding:8px 14px}
+[data-act=theme]{display:inline-flex;align-items:center;justify-content:center}
+body.in-exam .tf-acct{display:none!important}
+/* ===== TesTify · luxury skin (loaded last so it wins) ===== */
+:root{--bg:#f6f2ea;--card:#fffdf8;--text:#1b2233;--muted:#6f7788;--line:#e9e1d1;
+  --brand:#1c2b4a;--brand-2:#2c4272;--brand-soft:#f0eadc;--accent:#b8934f;--gold:#b8934f;--gold-2:#dcc28a;
+  --green:#2e8f66;--red:#c0455a;--amber:#c99a3d;
+  --shadow:0 1px 2px rgba(28,43,74,.04),0 12px 32px rgba(28,43,74,.08);--shadow-lg:0 26px 64px rgba(28,43,74,.2);
+  --serif:'Playfair Display','Cormorant Garamond',Georgia,'Times New Roman',serif}
+html[data-theme="dark"]{--bg:#090e1b;--card:#111a2e;--text:#efe8d8;--muted:#9ba5bb;--line:#222f50;
+  --brand:#dcc28a;--brand-2:#ecd8a8;--brand-soft:#18233f;--accent:#dcc28a;--gold:#dcc28a;--gold-2:#f0dfb4;
+  --green:#4cbf93;--red:#e0697d;--shadow:0 1px 2px rgba(0,0,0,.3),0 14px 36px rgba(0,0,0,.35);--shadow-lg:0 28px 70px rgba(0,0,0,.55)}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.005em;
+  background:radial-gradient(900px 480px at 8% -10%,rgba(184,147,79,.12),transparent 60%),radial-gradient(800px 440px at 100% 0%,rgba(44,66,114,.10),transparent 55%),var(--bg)!important}
+h1,h2,.brand{font-family:var(--serif);letter-spacing:-.01em}
+h1{font-size:27px;font-weight:700}h2{font-size:18px;font-weight:600}
+.topbar{height:64px;background:linear-gradient(135deg,#0d1730,#1c2b4a)!important;color:#f3e7cb;border-bottom:1px solid rgba(220,194,138,.45);
+  border-radius:0 0 26px 26px;box-shadow:0 14px 34px rgba(13,23,48,.28)!important;padding:0 20px}
+.topbar .btn{background:rgba(220,194,138,.1)!important;border:1px solid rgba(220,194,138,.35)!important;color:#f3e7cb!important}
+.logo{border-radius:50%!important;background:linear-gradient(135deg,#f0dfb4,#b8934f)!important;color:#1a1405!important;font-family:var(--serif);box-shadow:0 4px 12px rgba(184,147,79,.4)}
+.btn,.btn.sm{border-radius:999px!important}
+.btn{padding:11px 20px;font-weight:600;letter-spacing:.01em;border-color:var(--line)}
+.btn.sm{padding:8px 15px}
+.btn.primary{background:linear-gradient(135deg,#1c2b4a,#2c4272)!important;color:#fbf3df!important;border:1px solid rgba(220,194,138,.55)!important;box-shadow:0 10px 24px rgba(28,43,74,.28)!important}
+html[data-theme="dark"] .btn.primary{background:linear-gradient(135deg,#ecd8a8,#c9a45e)!important;color:#1a1405!important;border-color:transparent!important}
+.btn.accent{background:linear-gradient(135deg,var(--gold-2),var(--gold))!important;color:#1a1405!important}
+.btn.soft{background:var(--brand-soft)!important;color:var(--text)!important;border:1px solid var(--line)!important}
+.btn:hover{box-shadow:0 8px 22px rgba(28,43,74,.14)}
+.card,.tcard,.fbox,.stat,.tile,.panel{border-radius:22px!important;border:1px solid var(--line);box-shadow:var(--shadow)}
+.tcard:hover{transform:translateY(-4px);border-color:var(--gold-2)}
+.fbox,.stat{border-radius:18px!important}
+input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],select,input[type=file],textarea,.tf-in{border-radius:14px!important;background:var(--card)!important;border:1px solid var(--line)}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)!important;box-shadow:0 0 0 4px rgba(184,147,79,.2)!important}
+.modal{backdrop-filter:blur(8px);background:rgba(9,14,27,.55)}
+.modal .box,.tf-box{border-radius:28px!important;border:1px solid var(--line);box-shadow:var(--shadow-lg)}
+.navs{gap:8px;padding-top:14px}
+.nav{border-radius:999px!important;padding:9px 20px;border:1px solid transparent}
+.nav.on{background:var(--card)!important;color:var(--text)!important;border-color:var(--gold-2);box-shadow:var(--shadow)}
+.tab{border-radius:999px}
+.tab.on{background:linear-gradient(135deg,#1c2b4a,#2c4272)!important;color:#fbf3df!important}
+html[data-theme="dark"] .tab.on{background:linear-gradient(135deg,#ecd8a8,#c9a45e)!important;color:#1a1405!important}
+.chip,.tag{letter-spacing:.02em}
+table{border-collapse:separate;border-spacing:0}
+th{letter-spacing:.08em;font-size:11px}
+tr:last-child td{border-bottom:0}
+.toast{border-radius:999px!important;background:#0d1730!important;color:#f3e7cb!important;border:1px solid rgba(220,194,138,.5);padding:11px 22px}
+.bld-row{border-radius:18px}.bld-row img{border-radius:12px}
+/* exam screen: same CBT layout, no sharp corners */
+.nta-top,.nta-bar2{border-radius:0}
+.nta-time .box,.nta-subbtn,.nta-opt,.nta-keys button,.p-nv{border-radius:12px!important}
+.nbtn{border-radius:999px!important;padding:8px 16px}
+.pbtn,.pmark{border-radius:12px}
+/* chip, scrollbars */
+.tf-b{border-radius:999px!important}
+.tf-b.p{background:linear-gradient(135deg,#1c2b4a,#2c4272);color:#fbf3df;border:1px solid rgba(220,194,138,.55)}
+html[data-theme="dark"] .tf-b.p{background:linear-gradient(135deg,#ecd8a8,#c9a45e);color:#1a1405;border-color:transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+::selection{background:rgba(184,147,79,.3)}
+input:not([type]),input[type=search],input[type=tel],input[type=url]{border-radius:14px!important;background:var(--card);border:1px solid var(--line)}
+input[type=file]::file-selector-button{border-radius:999px;border:1px solid var(--line);background:var(--brand-soft);color:var(--text);padding:7px 14px;margin-right:10px;font-weight:600;cursor:pointer}
+/* ===== About the author ===== */
+.ab{max-width:880px;margin:0 auto;padding-bottom:28px}
+.ab-hero{text-align:center;padding:42px 20px 30px;margin-top:6px;border-radius:32px;border:1px solid var(--line);box-shadow:var(--shadow);
+  background:radial-gradient(520px 260px at 50% -10%,rgba(184,147,79,.18),transparent 70%),var(--card)}
+.ab-ring{width:118px;height:118px;margin:0 auto 18px;border-radius:50%;padding:3px;background:conic-gradient(from 210deg,#f0dfb4,#b8934f,#f0dfb4,#8a6a2f,#f0dfb4);box-shadow:0 14px 34px rgba(184,147,79,.35)}
+.ab-av{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-size:42px;font-weight:700;letter-spacing:.04em;
+  color:#f3e7cb;background:linear-gradient(145deg,#0d1730,#1c2b4a)}
+.ab-eyebrow{font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.ab-name{font-family:var(--serif);font-size:clamp(30px,6vw,44px);margin:8px 0 4px;letter-spacing:-.01em;background:none!important;-webkit-text-fill-color:var(--text)!important;color:var(--text)!important}
+.ab-role{font-size:15px;color:var(--text);font-weight:600}
+.ab-tag{font-size:13.5px;color:var(--muted);margin-top:4px}
+.ab-rule{width:64px;height:2px;margin:20px auto;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.ab-quote{max-width:600px;margin:0 auto;font-family:var(--serif);font-size:17px;line-height:1.7;color:var(--text);font-style:italic}
+.ab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:16px}
+.ab-card{padding:22px;border-radius:24px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow)}
+.ab-card h3{font-family:var(--serif);font-size:18px;margin:10px 0 6px}
+.ab-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.65}
+.ab-ico{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--gold);border:1px solid var(--gold-2);font-size:18px;background:var(--brand-soft)}
+.ab-wide{margin-top:14px}
+.ab-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ab-chips span{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--brand-soft);font-size:12.5px;font-weight:600}
+.ab-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.ab-links a{text-decoration:none;display:inline-flex}
+.ab-foot{text-align:center;margin-top:22px;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.tf-credit{margin:22px auto calc(86px + var(--safe-b));text-align:center;cursor:pointer;max-width:420px}
+.tf-credit .m{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.tf-credit .n{font-family:var(--serif);font-size:19px;font-weight:700;margin-top:4px;background:none!important;-webkit-text-fill-color:currentColor!important;color:var(--text)!important}
+.tf-credit .s{font-size:11.5px;color:var(--gold);margin-top:5px;letter-spacing:.06em}
+</style>
 </body>
 </html>
