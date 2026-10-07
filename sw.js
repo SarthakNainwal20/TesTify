@@ -1,4 +1,4 @@
-const CACHE='testify-v9';           // bump this number on every deploy so installed copies refresh
+const CACHE='testify-v10';           // bump this number on every deploy so installed copies refresh
 const SHELL=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 const CACHE_HOSTS=['cdn.jsdelivr.net','cdnjs.cloudflare.com','unpkg.com','esm.sh','fonts.googleapis.com','fonts.gstatic.com'];
 

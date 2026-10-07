@@ -348,7 +348,7 @@ async function pdfToPageBlobs(file,onP){
   const out=[];
   for(let i=1;i<=doc.numPages;i++){
     const page=await doc.getPage(i),base=page.getViewport({scale:1});
-    const vp=page.getViewport({scale:Math.min(2.6,Math.max(1.4,1500/base.width))});
+    const vp=page.getViewport({scale:Math.min(3,Math.max(2,2200/base.width))});
     const c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);
     const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
     await page.render({canvasContext:ctx,viewport:vp}).promise;
@@ -364,7 +364,7 @@ async function splitBlobAt(blob,ratio){
   return[await mk(0,cut),await mk(cut,bmp.height-cut)];}
 
 /* ============ smart question splitter (layout-aware) ============ */
-const Q_RE=/^(?:(?:Q(?:uestion|ues)?|Que)\s*\.?\s*(\d{1,3})\b|(\d{1,3})\s*[.):\]])/i;
+const Q_RE=/^(?:(?:Q(?:uestion|ues)?|Que)\s*\.?\s*(\d{1,3})\b|(\d{1,3})\s*(?:[):\]]|\.(?!\d)))/i;
 const HEAD_RE=/^(?:section\s*[-–:.]?\s*[a-z0-9]{1,3}|part\s*[-–:.]?\s*(?:[a-d]|i{1,3}|iv|[1-4])|physics|chemistry|mathematics|maths)\s*(?:[-–:(].{0,60})?$/i;
 const END_RE=/^(?:answer\s*keys?|solutions?|hints?\s*(?:&|and)\s*solutions?)\s*[:\-–]?$/i;
 function toLines(els){
@@ -392,26 +392,151 @@ function cropC(cv,x,y,w,h){x=Math.max(0,Math.round(x));y=Math.max(0,Math.round(y
 function hasInk(cv,x,y,w,h){const c=cropC(cv,x,y,w,h);if(!c)return false;
   const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;
   for(let i=0;i<d.length;i+=24)if(d[i]<225&&++n>40)return true;return false;}
+function gapAt(cv,x0,x1,y,up=60){          // y just above a question's first line: cut in the blank band above it (keeps inline formulas whole)
+  const ya=Math.max(0,Math.floor(y-up)),r0=Math.round(y-ya),h=Math.min(cv.height,Math.ceil(y+2))-ya,w=Math.max(4,Math.round(x1-x0));
+  if(h<8||r0<4)return y-6;
+  const d=cv.getContext('2d').getImageData(Math.max(0,Math.round(x0)),ya,Math.min(w,cv.width-Math.round(x0)),h).data,W=Math.min(w,cv.width-Math.round(x0)),ink=new Uint8Array(h);
+  for(let r=0;r<h;r++){let n=0;for(let c=0;c<W;c+=2){const i=(r*W+c)*4;if(d[i]<215||d[i+1]<215||d[i+2]<215){if(++n>1)break;}}ink[r]=n>1?1:0;}
+  let r=Math.min(h-1,r0-1);
+  while(r>=0&&ink[r])r--;                                   // ink touching the line belongs to this question (formula tops, banners)
+  if(r<0)return y-6;
+  const e=r;while(r>=0&&!ink[r])r--;
+  return e-r>=3?ya+Math.round((r+1+e)/2):y-6;}
 function stitchC(parts){if(parts.length===1)return parts[0];
   const w=Math.max(...parts.map(p=>p.width)),h=parts.reduce((s,p)=>s+p.height+8,0);
   const o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
   g.fillStyle='#fff';g.fillRect(0,0,w,h);let y=0;parts.forEach(p=>{g.drawImage(p,0,y);y+=p.height+8;});return o;}
-async function pdfToQuestionBlobs(file,onP){
+/* ============ question types: single, multi-correct, numerical, match-the-column ============ */
+const TY={mcq:'MCQ',multi:'Multi',num:'Num',matrix:'Match'};
+const TYL={mcq:'Single correct',multi:'One or more correct',num:'Numerical',matrix:'Match the following'};
+const DEF_SEC={mcq:'SECTION A',num:'SECTION B',multi:'SECTION C',matrix:'SECTION D'};
+const secOf=q=>q.section||DEF_SEC[q.type]||'SECTION';
+const letterSet=a=>[...new Set(String(a??'').toUpperCase().match(/[A-D]/g)||[])].sort();
+const parseMatrix=a=>{const o={};String(a??'').toUpperCase().replace(/\s+/g,'').split(',').forEach(x=>{const m=x.match(/^([A-Z])(?:->|>|=)([A-Z]+)$/);if(m)o[m[1]]=[...new Set(m[2])].sort().join('');});return o;};
+const fmtMatrix=o=>Object.keys(o).sort().filter(k=>o[k]).map(k=>k+'->'+o[k]).join(',');
+const matrixDims=q=>{const o=parseMatrix(q.answer),rows=Object.keys(o);let nr=4,nc=5;
+  rows.forEach(r=>{nr=Math.max(nr,r.charCodeAt(0)-64);});
+  Object.values(o).forEach(v=>v.split('').forEach(c=>{nc=Math.max(nc,c.charCodeAt(0)-79);}));
+  return{nr:Math.min(nr,8),nc:Math.min(nc,8)};};
+const negOf=(q,t)=>q.type==='mcq'?t.neg:q.type==='num'?(t.negNum??t.neg):q.type==='multi'?(t.negMulti??2):0;
+function answerUI(q){
+  const v=(window.__curAnswers||{})[q.id];
+  if(q.type==='mcq')return `<div class="nta-opts">${['A','B','C','D'].map((o,i)=>`
+        <button class="nta-opt ${v===o?'on':''}" data-opt="${o}">
+          <span class="nta-radio"></span><span>(${i+1})&nbsp; Option ${o}</span></button>`).join('')}</div>`;
+  if(q.type==='multi'){const st=new Set(letterSet(v));
+    return `<div class="nta-opts">${['A','B','C','D'].map((o,i)=>`
+        <button class="nta-opt ${st.has(o)?'on':''}" data-mopt="${o}">
+          <span class="nta-radio sq"></span><span>(${i+1})&nbsp; Option ${o}</span></button>`).join('')}</div>
+      <div class="hint" style="margin-top:8px">One or more options can be correct.</div>`;}
+  if(q.type==='matrix'){const{nr,nc}=matrixDims(q),cur=parseMatrix(v),cols=Array.from({length:nc},(_,i)=>String.fromCharCode(80+i)),rows=Array.from({length:nr},(_,i)=>String.fromCharCode(65+i));
+    return `<div class="nta-mx"><div class="mxh"><span></span>${cols.map(c=>`<span>${c}</span>`).join('')}</div>${rows.map(r=>`<div class="mxr"><b>${r}</b>${cols.map(c=>`<button class="mxc ${(cur[r]||'').includes(c)?'on':''}" data-mx="${r}${c}" aria-label="${r} to ${c}"></button>`).join('')}</div>`).join('')}</div>
+      <div class="hint" style="margin-top:8px">Match each row of Column-I with one or more options of Column-II.</div>`;}
+  return `<div class="nta-num" style="margin-top:14px"><div class="nta-numdisp" id="numDisp">${esc(v||'')}</div>
+        <div class="nta-keys">${['1','2','3','4','5','6','7','8','9','0','.','-','⌫','Clr'].map(k=>`<button data-k="${k}">${k}</button>`).join('')}</div></div>`;}
+function schemeText(t){const T=new Set(t.questions.map(q=>q.type)),s=[];
+  if(T.has('mcq'))s.push(`Single correct: +${t.marks} / −${t.neg}`);
+  if(T.has('multi'))s.push(`One or more correct: +${t.marks} if all correct options are chosen, partial marks (+${+(t.marks/4).toFixed(2)} per correct option) when no wrong option is chosen, −${t.negMulti??2} if any wrong option is chosen`);
+  if(T.has('num'))s.push(`Numerical: +${t.marks} / −${t.negNum??t.neg}`);
+  if(T.has('matrix'))s.push(`Match the following: +${t.marks} when every row is right, partial marks for each correct row, no negative`);
+  return s.join('. ')+'. Unattempted 0.';}
+function scoreQ(q,g,P){
+  const M=P.marks,none={st:'skipped',mk:0};
+  if(g==null||g==='')return none;
+  if(q.type==='mcq')return String(g).toUpperCase()===String(q.answer||'').toUpperCase()?{st:'correct',mk:M}:{st:'wrong',mk:-P.neg};
+  if(q.type==='multi'){const C=new Set(letterSet(q.answer)),G=letterSet(g),ng=-(P.negMulti??2);
+    if(!G.length)return none;
+    if(!C.size||G.some(x=>!C.has(x)))return{st:'wrong',mk:ng};
+    if(G.length===C.size)return{st:'correct',mk:M};
+    return{st:'correct',mk:+(G.length*M/4).toFixed(2),partial:true};}
+  if(q.type==='matrix'){const A=parseMatrix(q.answer),Gm=parseMatrix(g),rows=Object.keys(A),gl=Object.keys(Gm).length;
+    if(!gl)return none;
+    const ok=rows.filter(r=>Gm[r]===A[r]).length;
+    if(rows.length&&ok===rows.length&&gl===rows.length)return{st:'correct',mk:M};
+    if(ok>0)return{st:'correct',mk:+(M*ok/rows.length).toFixed(2),partial:true};
+    return{st:'wrong',mk:0};}
+  const ok=q.answer!==''&&!isNaN(parseFloat(q.answer))&&!isNaN(parseFloat(g))&&near(g,q.answer);
+  return ok?{st:'correct',mk:M}:{st:'wrong',mk:-(P.negNum??P.neg)};}
+
+/* ============ paper structure helpers (subjects, sections, shared passages, printed answer key) ============ */
+const SUBJ_RE=/^(?:part\s*[-–:.]?\s*(?:\d+|[ivx]+|[a-d])\s*[-–:.]?\s*)?(physics|chemistry|mathematics|maths|math|biology|botany|zoology)\s*(?:[-–:(].{0,40})?$/i;
+const SEC_RE=/^section\s*[-–:.]?\s*([ivx]+|[a-z]|\d+)\s*(?:\(\s*([^)]{1,30}?)\s*\))?\s*(?:[-–:].{0,40})?$/i;
+const COMMON_RE=/^(?:common\s+(?:content|data|passage|information)|paragraph|passage|comprehension)\b.*?(?:questions?|ques?|q)\.?\s*(?:nos?\.?)?\s*(\d{1,3})\s*(?:to|and|&|-|–)\s*(\d{1,3})/i;
+const normSubj=s=>{s=s.toLowerCase();return /^math/.test(s)?'Mathematics':s[0].toUpperCase()+s.slice(1);};
+const secLabel=m=>'Section '+m[1].toUpperCase()+(m[2]?' ('+m[2]+')':'');
+const keyShape=a=>{a=String(a||'').trim();return /->/.test(a)?'matrix':(/^[A-D](?:\s*[,;&]\s*[A-D])+$/i.test(a)||/^[A-D]{2,4}$/i.test(a))?'multi':/^[A-D]$/i.test(a)?'mcq':/^-?\d+(?:\.\d+)?$/.test(a)?'num':'';};
+function normAnswer(type,a){a=String(a??'').trim();
+  if(type==='mcq')return a.toUpperCase();
+  if(type==='multi')return letterSet(a).join(',');
+  if(type==='matrix')return fmtMatrix(parseMatrix(a));
+  return isNaN(+a)?a:String(+a);}
+function guessType(sec){
+  if(/^Section I \(ii\)$/i.test(sec))return'multi';
+  if(/^Section III$/i.test(sec)||/^Section B$/i.test(sec))return'num';
+  if(/^Section IV$/i.test(sec))return'matrix';
+  return'mcq';}
+function readKeyBlock(lines){
+  const map=new Map();let nums=null;
+  for(const L of lines){const t=L.text.trim().replace(/[→⇒➔➜]/g,'->');
+    if(map.size&&/^solutions?\b/i.test(t))break;
+    let m=t.match(/^Q(?:ue(?:stion)?)?\.?\s*(?:no\.?)?\s*((?:\d{1,3}\s+)*\d{1,3})$/i);
+    if(m){nums=m[1].trim().split(/\s+/).map(Number);continue;}
+    m=t.match(/^A(?:ns(?:wer)?)?\.?\s+(.+)$/i);
+    if(m&&nums){const toks=m[1].trim().split(/\s+/);if(toks.length===nums.length)nums.forEach((n,i)=>map.set(n,toks[i]));nums=null;}}
+  if(map.size)return map;
+  const votes=new Map();keyFromLines(lines,votes,1);
+  votes.forEach((v,q)=>{const b=[...v].sort((a,c)=>c[1]-a[1])[0];if(b)map.set(q,b[0]);});
+  return map;}
+function inferTypes(arr){
+  const metas=arr.meta,key=arr.key||new Map(),groups=[];
+  metas.forEach((m,i)=>{m.raw=key.has(i+1)?key.get(i+1):'';
+    const g=groups[groups.length-1];
+    if(g&&g.subject===m.subject&&g.section===m.section)g.items.push(m);else groups.push({subject:m.subject,section:m.section,items:[m]});});
+  let guessed=false;
+  groups.forEach(g=>{
+    const shapes=g.items.map(m=>keyShape(m.raw)).filter(Boolean);let ty='';
+    if(shapes.length)ty=shapes.includes('matrix')?'matrix':shapes.includes('multi')?'multi':shapes.every(s=>s==='num')?'num':shapes.every(s=>s==='mcq')?'mcq':'';
+    else{ty=guessType(g.section);if(ty!=='mcq')guessed=true;}
+    g.items.forEach(m=>{m.type=ty||keyShape(m.raw)||'mcq';m.answer=m.raw?normAnswer(m.type,m.raw):'';});
+    g.type=ty;});
+  arr.groups=groups.map(g=>({subject:g.subject,section:g.section,type:g.type||'mixed',count:g.items.length}));
+  arr.keyFound=metas.filter(m=>m.answer).length;arr.guessed=guessed;}
+
+async function pdfToQuestionBlobs(file,onP,hint){
   const lib=await getPdfjs(),doc=await lib.getDocument({data:await file.arrayBuffer()}).promise,N=doc.numPages,pages=[];
-  for(let p=1;p<=N;p++){                                   // pass 1: read the text layer
+  for(let p=1;p<=N;p++){                                   // pass 1: text layer + how big the pictures are
     const page=await doc.getPage(p),base=page.getViewport({scale:1}),sc=Math.min(2.6,Math.max(1.4,1500/base.width)),vp=page.getViewport({scale:sc});
     const tc=await page.getTextContent(),els=[];
     for(const it of tc.items){const s=(it.str||'').trim();if(!s)continue;
       const tr=lib.Util.transform(vp.transform,it.transform),h=Math.hypot(tr[2],tr[3])||10;
       els.push({s,x0:tr[4],x1:tr[4]+(it.width||0)*sc,y0:tr[5]-h*.95,y1:tr[5]+h*.25});}
-    pages.push({page,vp,els});onP?.(p,N,'Reading page');await new Promise(r=>setTimeout(r));}
+    let nImg=0,cover=0;const imgs=[];
+    try{const ol=await page.getOperatorList(),O=lib.OPS,st=[],id=[1,0,0,1,0,0];let m=id.slice();
+      ol.fnArray.forEach((fn,i)=>{
+        if(fn===O.save)st.push(m.slice());else if(fn===O.restore)m=st.pop()||id.slice();
+        else if(fn===O.transform)m=lib.Util.transform(m,ol.argsArray[i]);
+        else if(fn===O.paintImageXObject||fn===O.paintInlineImageXObject||fn===O.paintImageMaskXObject||fn===O.paintJpegXObject){
+          nImg++;cover=Math.max(cover,Math.hypot(m[0],m[1])*Math.hypot(m[2],m[3])/(base.width*base.height));
+          const M=lib.Util.transform(vp.transform,m),xs=[M[4],M[4]+M[0],M[4]+M[2],M[4]+M[0]+M[2]],ys=[M[5],M[5]+M[1],M[5]+M[3],M[5]+M[1]+M[3]];
+          imgs.push({x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)});}});}catch(e){}
+    pages.push({page,vp,els,nImg,cover,imgs});onP?.(p,N,'Reading page');await new Promise(r=>setTimeout(r));}
+  /* picture-only PDF where every page is one question picture (no numbers printed): one question per page */
+  const imgOnly=pages.filter(P=>P.els.length<12&&P.nImg>=1);
+  const pageMode=()=>{const o=pdfToPageBlobs(file,onP);return o;};
+  if(imgOnly.length>=N*.9){
+    const cv=imgOnly.map(P=>P.cover).sort((a,b)=>a-b),med=cv[cv.length>>1],near=hint&&Math.abs(hint-N)<=Math.max(2,Math.round(N*.1));
+    if(med<.78||near){const o=await pageMode();o.mode='page';return o;}}
   const norm=s=>s.toLowerCase().replace(/\d+/g,'#').replace(/\s+/g,' '),band=(e,H)=>Math.round((e.y0+e.y1)/2/H*40),cnt=new Map();
   pages.forEach(P=>{const seen=new Set();P.els.forEach(e=>{const b=band(e,P.vp.height);if(b>5&&b<35)return;
     const k=norm(e.s)+'@'+b;if(!seen.has(k)){seen.add(k);cnt.set(k,(cnt.get(k)||0)+1);}});});
   const need=Math.max(3,Math.ceil(N*.4)),isHF=(e,H)=>{const b=band(e,H);return(b<=5||b>=35)&&(cnt.get(norm(e.s)+'@'+b)||0)>=need;};
-  const out=[];let cur=null,expect=1,sectionSeen=false,stop=false,jumps=0,worker=null;
-  const close=async()=>{if(!cur)return;const cv=trim(stitchC(cur));cur=null;
-    if(cv&&cv.height>50)out.push(await new Promise(r=>cv.toBlob(r,'image/jpeg',.86)));};
+  const out=[],metas=[];let cur=null,common=null,expect=1,sectionSeen=false,stop=false,jumps=0,worker=null,usedOCR=false,
+    curSubject='',curSection='',stopAt=null;
+  const close=async()=>{if(!cur)return;const c=cur;cur=null;
+    if(c.kind==='common'){common={from:c.from,to:c.to,parts:c.parts.filter(Boolean)};return;}
+    const parts=[...(c.common||[]),...c.parts.filter(Boolean)];if(!parts.length)return;
+    const cv=trim(stitchC(parts));
+    if(cv&&cv.height>50){out.push(await new Promise(r=>cv.toBlob(r,'image/jpeg',.86)));metas.push({n:c.n,subject:c.subject,section:c.section});}};
   for(let p=0;p<N&&!stop;p++){                              // pass 2: cut questions
     const P=pages[p],{vp}=P,W=vp.width,H=vp.height;onP?.(p+1,N,'Splitting page');
     const cv=document.createElement('canvas');cv.width=Math.ceil(W);cv.height=Math.ceil(H);
@@ -419,7 +544,7 @@ async function pdfToQuestionBlobs(file,onP){
     await P.page.render({canvasContext:ctx,viewport:vp}).promise;
     let els,top=0,bot=H;
     if(P.els.length<12){                                    // scanned page -> OCR
-      els=[];try{const T=await getTesseract();worker=worker||await T.createWorker('eng');
+      els=[];usedOCR=true;try{const T=await getTesseract();worker=worker||await T.createWorker('eng');
         const{data}=await worker.recognize(cv);
         const ws=data.words||(data.lines||[]).flatMap(l=>l.words||[])||[];
         const all=ws.length?ws:(data.blocks||[]).flatMap(b=>(b.paragraphs||[]).flatMap(q=>(q.lines||[]).flatMap(l=>l.words||[])));
@@ -427,6 +552,7 @@ async function pdfToQuestionBlobs(file,onP){
     }else{
       els=P.els.filter(e=>!isHF(e,H));
       P.els.filter(e=>isHF(e,H)).forEach(e=>{if(band(e,H)<=5)top=Math.max(top,e.y1);else bot=Math.min(bot,e.y0);});}
+    P.clean=els;
     const gx=findGutter(els,W),strips=gx?[[0,gx],[gx,W]]:[[0,W]];
     for(const[sx0,sx1]of strips){
       const se=gx?els.filter(e=>(e.x0+e.x1)/2>=sx0&&(e.x0+e.x1)/2<sx1):els;
@@ -434,26 +560,45 @@ async function pdfToQuestionBlobs(file,onP){
       const xs=lines.map(l=>l.x0).sort((a,b)=>a-b),lm=xs.length?xs[Math.floor(xs.length*.1)]:0,tol=Math.max(24,.06*(sx1-sx0));
       const ev=[];
       for(const l of lines){
-        if(END_RE.test(l.text)){ev.push({k:'end',y:l.y0});break;}
-        const m=l.text.match(Q_RE),n=m&&l.x0<=lm+tol?+(m[1]||m[2]):0;
-        if(n&&(n===expect||(n===1&&sectionSeen)||(n>expect&&n<=expect+2))){
+        const t=l.text;
+        if(END_RE.test(t)){ev.push({k:'end',y:l.y0});stopAt={p,y:l.y0,sx0,sx1};break;}
+        let m;
+        if(t.length<70&&(m=t.match(SUBJ_RE))){ev.push({k:'subj',y:l.y0,v:normSubj(m[1])});sectionSeen=true;continue;}
+        if(t.length<60&&(m=t.match(SEC_RE))){ev.push({k:'sec',y:l.y0,v:secLabel(m)});sectionSeen=true;continue;}
+        if(l.x0<=lm+tol&&(m=t.match(COMMON_RE))){ev.push({k:'common',y:l.y0,from:+m[1],to:+m[2]});continue;}
+        const mq=t.match(Q_RE),n=mq&&l.x0<=lm+tol?+(mq[1]||mq[2]):0;
+        if(n&&(n===expect||(n===1&&sectionSeen)||(n>expect&&n<=expect+2&&!sectionSeen))){
           if(n>expect&&!(n===1&&sectionSeen))jumps++;
-          ev.push({k:'q',y:l.y0,n});expect=n+1;sectionSeen=false;}
-        else if(!m&&l.x0<=lm+tol&&HEAD_RE.test(l.text)){ev.push({k:'head',y:l.y0});sectionSeen=true;}}
-      const firstY=ev.length?ev[0].y-4:bot;
-      if(cur){                                              // question carried over from previous column/page
-        if(lines.some(l=>l.y0<firstY-1)||hasInk(cv,sx0,top,sx1-sx0,firstY-top)){const c=cropC(cv,sx0,top,sx1-sx0,firstY-top);if(c)cur.push(c);}
+          ev.push({k:'q',y:l.y0,n});expect=n+1;sectionSeen=false;}}
+      const adj=y=>{let t=y;for(let k=0;k<3;k++){const im=P.imgs.find(r=>r.y0<t-1&&r.y1>t+3&&r.x1>sx0&&r.x0<sx1&&r.y1-r.y0<300);if(!im)break;t=im.y0;}return gapAt(cv,sx0,sx1,t);};   // inline formula pictures that start above the first text line
+      const cutY=ev.map(e=>adj(e.y)),firstY=ev.length?cutY[0]:bot;
+      if(cur){                                              // piece carried over from the previous column / page
+        if(lines.some(l=>l.y0<firstY-1)||hasInk(cv,sx0,top,sx1-sx0,firstY-top)){const c=cropC(cv,sx0,top,sx1-sx0,firstY-top);if(c)cur.parts.push(c);}
         else await close();}
       for(let j=0;j<ev.length;j++){
         const e=ev[j];
-        if(e.k==='end'){await close();stop=true;break;}
         await close();
-        if(e.k==='q'){const nx=ev[j+1],y1=nx?nx.y-(nx.k==='q'?6:3):bot,c=cropC(cv,sx0,Math.max(top,e.y-6),sx1-sx0,y1-Math.max(top,e.y-6));
-          cur=c?[c]:[];}}
+        if(e.k==='end'){stop=true;break;}
+        if(e.k==='subj'){curSubject=e.v;common=null;continue;}
+        if(e.k==='sec'){curSection=e.v;common=null;continue;}
+        const nx=ev[j+1],y0=Math.max(top,cutY[j]),y1=nx?cutY[j+1]:bot,c=cropC(cv,sx0,y0,sx1-sx0,y1-y0);
+        if(e.k==='common'){cur={kind:'common',parts:c?[c]:[],from:e.from,to:e.to};}
+        else{if(common&&e.n>common.to)common=null;
+          cur={kind:'q',parts:c?[c]:[],n:e.n,subject:curSubject,section:curSection,common:common&&e.n>=common.from&&e.n<=common.to?common.parts:null};}}
       if(stop)break;}
     await new Promise(r=>setTimeout(r));}
   await close();if(worker)try{await worker.terminate();}catch{}
-  if(out.length<2)return null;out.jumps=jumps;return out;}
+  if(out.length<2)return null;
+  /* scanned paper where OCR found the wrong number of questions but the page count matches the expected count */
+  if(usedOCR&&hint&&Math.abs(out.length-hint)>Math.max(2,hint*.2)&&Math.abs(N-hint)<=Math.max(2,hint*.2)){const o=await pageMode();o.mode='page';return o;}
+  /* answer key printed at the end of the same PDF */
+  let keyLines=[];
+  if(stopAt){const P=pages[stopAt.p];keyLines=toLines((P.clean||[]).filter(e=>e.y0>=stopAt.y-2));
+    for(let p=stopAt.p+1;p<N;p++){const Q=pages[p];keyLines.push(...toLines(Q.els.filter(e=>!isHF(e,Q.vp.height))));}}
+  const key=readKeyBlock(keyLines);
+  out.meta=metas;out.key=key;out.jumps=jumps;out.mode='text';out.usedOCR=usedOCR;
+  inferTypes(out);
+  return out;}
 
 /* ============ AI answer solver (optional - your own API key) ============ */
 const aiCfg=()=>{try{return JSON.parse(localStorage.tf_ai||'{}')}catch{return{}}};
@@ -470,8 +615,8 @@ function aiSettings(){return new Promise(res=>{const c=aiCfg(),m=document.create
   $('#aiOk',m).onclick=()=>{const v={provider:$('#aiP',m).value,key:$('#aiK',m).value.trim(),model:$('#aiM',m).value.trim()};
     if(!v.key)return toast('Please paste your API key');localStorage.tf_ai=JSON.stringify(v);m.remove();res(v);};});}
 const aiPrompt=q=>`You are a JEE (Main/Advanced) expert. The image is ONE question${q.subject?' from '+q.subject:''}. It is ${q.type==='mcq'
-  ?'a single-correct MCQ with options A,B,C,D (if options are numbered 1-4 map 1->A, 2->B, 3->C, 4->D)':'a numerical-value question (the answer is a number)'}.
-Solve it carefully, then reply with ONLY this JSON: {"answer":"${q.type==='mcq'?'A, B, C or D':'number only, no units'}","remark":"2-3 sentence explanation of the key steps","confidence":0.0-1.0}. If the image is unreadable reply {"answer":"","remark":"unreadable","confidence":0}.`;
+  ?'a single-correct MCQ with options A,B,C,D (if options are numbered 1-4 map 1->A, 2->B, 3->C, 4->D)':q.type==='multi'?'a multiple-correct question: ONE OR MORE of options A,B,C,D are correct':q.type==='matrix'?'a match-the-column question: match each row A,B,C,D of Column-I with one or more items P,Q,R,S,T of Column-II':'a numerical-value question (the answer is a number)'}.
+Solve it carefully, then reply with ONLY this JSON: {"answer":"${q.type==='mcq'?'A, B, C or D':q.type==='multi'?'all correct letters separated by commas, e.g. A,C':q.type==='matrix'?'e.g. A->P,B->QR,C->S,D->T':'number only, no units'}","remark":"2-3 sentence explanation of the key steps","confidence":0.0-1.0}. If the image is unreadable reply {"answer":"","remark":"unreadable","confidence":0}.`;
 async function callAI(c,blob,q){
   const data=await b64raw(blob);let txt='';
   for(let a=0;a<4;a++){
@@ -486,6 +631,8 @@ async function callAI(c,blob,q){
   const m=txt.match(/\{[\s\S]*\}/);if(!m)throw new Error('AI reply not understood');
   const o=JSON.parse(m[0]);let ans=String(o.answer??'').trim();
   if(q.type==='mcq'){ans=ans.toUpperCase().replace(/^\(?([A-D1-4]).*$/,'$1');ans=({1:'A',2:'B',3:'C',4:'D'})[ans]||ans;if(!/^[A-D]$/.test(ans))ans='';}
+  else if(q.type==='multi'){ans=letterSet(ans).join(',');}
+  else if(q.type==='matrix'){ans=fmtMatrix(parseMatrix(ans.replace(/→|⇒/g,'->')));}
   else{ans=ans.replace(/[^\d.\-eE+]/g,'');if(isNaN(parseFloat(ans)))ans='';}
   return{answer:ans,remark:String(o.remark||'').slice(0,600),confidence:Math.max(0,Math.min(1,+o.confidence||0))};}
 async function aiSolve(qs,getBlob,onP){
@@ -604,9 +751,9 @@ async function keyTextLayer(file){
       els.push({s,x0:tr[4],x1:tr[4]+(it.width||0),y0:tr[5]-h*.95,y1:tr[5]+h*.25});}
     pages.push(els);}
   return pages;}
-const typeRanges=qs=>{const o={mcq:[],num:[]};qs.forEach(q=>o[q.type==='num'?'num':'mcq'].push(q.no));
+const typeRanges=qs=>{const o={mcq:[],multi:[],num:[],matrix:[]};qs.forEach(q=>(o[q.type]||o.mcq).push(q.no));
   const rg=a=>{const r=[];a.forEach(n=>{const l=r[r.length-1];if(l&&n===l[1]+1)l[1]=n;else r.push([n,n]);});return r.map(x=>x[0]===x[1]?x[0]:x[0]+'-'+x[1]).join(', ');};
-  return `MCQ (single correct): ${rg(o.mcq)||'none'}. Numerical value: ${rg(o.num)||'none'}.`;};
+  return `MCQ (single correct): ${rg(o.mcq)||'none'}. One or more correct (answer like A,C): ${rg(o.multi)||'none'}. Numerical value: ${rg(o.num)||'none'}. Match the column (answer like A->P,B->QR,C->S,D->T): ${rg(o.matrix)||'none'}.`;};
 async function aiVision(c,blob,prompt,maxTok){
   const data=await b64raw(blob);
   for(let a=0;a<4;a++){
@@ -621,7 +768,7 @@ async function aiVision(c,blob,prompt,maxTok){
   throw new Error('AI busy, try again');}
 async function aiReadKey(c,blob,qs){
   const txt=await aiVision(c,blob,`This image is (part of) a JEE answer key. Read EVERY question number it shows together with its answer. Reply with ONLY JSON: {"answers":{"1":"A","2":"12.5"}}.
-Question types by number: ${typeRanges(qs)} For MCQ answers give one letter A-D (convert 1/2/3/4 to A/B/C/D). For numerical answers give the number only. Do not skip entries, do not invent entries that are not visible, ignore headings and marks.`,4000);
+Question types by number: ${typeRanges(qs)} For single-correct answers give one letter A-D (convert 1/2/3/4 to A/B/C/D). For multiple-correct give all letters like A,C. For numerical answers give the number only. For match-the-column give A->P,B->QR style. Do not skip entries, do not invent entries that are not visible, ignore headings and marks.`,4000);
   const m=txt.match(/\{[\s\S]*\}/);if(!m)throw new Error('AI reply not understood');
   const o=JSON.parse(m[0]),a=o.answers||o,r=new Map();
   (Array.isArray(a)?a.map(x=>[x.q??x.no??x.number,x.a??x.answer]):Object.entries(a)).forEach(([k,v])=>{const q=parseInt(k,10);if(q&&v!=null&&v!=='')r.set(q,String(v));});
@@ -665,7 +812,7 @@ async function scanKeyFiles(files,qs,opts={}){
   const found=new Map();found.alt=new Map();found.weak=new Set();found.N=N;found.usedAI=usedAI;found.aiErr=aiErr;found.ocrErr=ocrErr;
   votes.forEach((m,q)=>{const a=[...m].sort((x,y)=>y[1]-x[1]);found.set(q,a[0][0]);if(a[0][1]<1)found.weak.add(q);if(a.length>1)found.alt.set(q,a.slice(1).map(x=>x[0]));});
   return found;}
-const keyNorm=(q,v)=>{v=String(v??'').trim().toUpperCase();if(q.type==='mcq'){if(/^[1-4]$/.test(v))return'ABCD'[+v-1];if(v==='8')return'B';if(v==='0')return'D';}return v;};
+const keyNorm=(q,v)=>{v=String(v??'').trim().toUpperCase();if(q.type==='multi')return letterSet(v).join(',')||v;if(q.type==='matrix')return fmtMatrix(parseMatrix(v))||v;if(q.type==='mcq'){if(/^[1-4]$/.test(v))return'ABCD'[+v-1];if(v==='8')return'B';if(v==='0')return'D';}return v;};
 function keyReviewModal(draft,found,onApply){
   const m=document.createElement('div');m.className='modal';
   const off=()=>+($('#krOff',m)?.value||0);
@@ -885,9 +1032,10 @@ async function renderBuilder(existing){
     host.innerHTML=draft.questions.map(q=>`
       <div class="bld-row" data-q="${q.id}"><b>Q${q.no}</b><img data-zoom alt="Q${q.no}">
         <select data-f="subject">${[...new Set([...pattern.map(p=>p.subject),q.subject])].filter(Boolean).map(s=>`<option ${s===q.subject?'selected':''}>${esc(s)}</option>`).join('')}</select>
-        <select data-f="type"><option value="mcq" ${q.type==='mcq'?'selected':''}>MCQ</option><option value="num" ${q.type==='num'?'selected':''}>Num</option></select>
+        <select data-f="type">${Object.keys(TYL).map(k=>`<option value="${k}" ${q.type===k?'selected':''}>${TYL[k]}</option>`).join('')}</select>
         <div class="ansc">${q.ai?`<span class="hint" title="${esc(q.remark||'')}">🤖${q.conf!=null?Math.round(q.conf*100)+'%':''}</span> `:''}${q.type==='mcq'?['A','B','C','D'].map(o=>`<button class="btn sm ${q.answer===o?'primary':''}" data-ans="${o}">${o}</button>`).join(' ')
-          :`<input data-f="answer" value="${esc(q.answer||'')}" placeholder="e.g. 12">`}</div>
+          :q.type==='multi'?['A','B','C','D'].map(o=>`<button class="btn sm ${letterSet(q.answer).includes(o)?'primary':''}" data-mans="${o}">${o}</button>`).join(' ')
+          :`<input data-f="answer" value="${esc(q.answer||'')}" placeholder="${q.type==='matrix'?'A->R,B->PQ,C->S,D->T':'e.g. 12'}">`}</div>
         <button class="btn ghost sm" data-split>✂</button></div>`).join('');
     for(const q of draft.questions){const im=host.querySelector(`[data-q="${q.id}"] img`);if(im)im.src=await thumb(q);}}
   $('#keyList').onclick=async e=>{
@@ -895,29 +1043,38 @@ async function renderBuilder(existing){
     const q=draft.questions.find(x=>x.id===row.dataset.q);
     const a=e.target.closest('[data-ans]');
     if(a){q.answer=a.dataset.ans;q.ai=false;q.remark='';buzz();drawKeys();return;}
+    const ma=e.target.closest('[data-mans]');
+    if(ma){const st=new Set(letterSet(q.answer));st.has(ma.dataset.mans)?st.delete(ma.dataset.mans):st.add(ma.dataset.mans);q.answer=[...st].sort().join(',');q.ai=false;q.remark='';buzz();drawKeys();return;}
     if(e.target.matches('[data-zoom]'))return lightbox(e.target.src);
     if(e.target.closest('[data-split]')){
       const blob=pending.get(q.id)||await DB.get('images',imgKey(draft.id,q.id));if(!blob)return;
       const ratio=await askSplit(URL.createObjectURL(blob));if(!ratio)return;
       const[a1,a2]=await splitBlobAt(blob,ratio);
-      const nq={id:uid(),subject:q.subject,chapter:q.chapter,type:q.type,answer:''};
+      const nq={id:uid(),subject:q.subject,section:q.section||'',chapter:q.chapter,type:q.type,answer:''};
       pending.set(q.id,a1);pending.set(nq.id,a2);
       draft.questions.splice(idxOf(draft,q.id)+1,0,nq);
       draft.questions.forEach((x,i)=>x.no=i+1);drawKeys();toast('Page split');}};
   $('#keyList').onchange=e=>{const row=e.target.closest('[data-q]');if(!row)return;
     const q=draft.questions.find(x=>x.id===row.dataset.q),f=e.target.dataset.f;if(!f)return;
-    q[f]=e.target.value;if(f==='answer'){q.ai=false;q.remark='';}if(f==='type'){q.answer='';q.ai=false;q.remark='';drawKeys();}};
+    q[f]=e.target.value;if(f==='answer'){q.ai=false;q.remark='';q.answer=normAnswer(q.type,q.answer);if(q.type==='matrix'||q.type==='multi')drawKeys();}if(f==='type'){q.answer='';q.ai=false;q.remark='';drawKeys();}};
   $('#bPdf').onchange=async e=>{const f=e.target.files[0];if(!f)return;
     const bar=$('#bProg');bar.style.display='block';$('#bStat').textContent='Rendering…';
     try{const cb=(i,n,l)=>{bar.firstElementChild.style.width=(i/n*100)+'%';$('#bStat').textContent=`${l||'Page'} ${i}/${n}…`;};
-      let blobs=null;try{blobs=await pdfToQuestionBlobs(f,cb);}catch(e){console.warn('smart split failed',e);}
-      const smart=!!blobs;if(!blobs)blobs=await pdfToPageBlobs(f,cb);
-      draft.questions=blobs.map((b,i)=>{const id=uid();pending.set(id,b);return{id,no:i+1,subject:'',chapter:'',type:'mcq',answer:''};});
-      applyPattern(draft.questions,pattern);
-      if(!$('#bName').value)$('#bName').value=f.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
       const want=pattern.reduce((a,x)=>a+(+x.count||0),0);
-      $('#bStat').textContent=smart?`${blobs.length} questions detected automatically.`+(want&&want!==blobs.length?` Pattern expects ${want} — check the list below and use ✂ to split any merged question.`:'')
-        :`Could not detect question numbers — imported ${blobs.length} pages. Use ✂ to split them.`;drawKeys();toast('PDF imported');}
+      let blobs=null;try{blobs=await pdfToQuestionBlobs(f,cb,want);}catch(e){console.warn('smart split failed',e);}
+      const meta=blobs&&blobs.meta,mode=blobs&&blobs.mode;
+      if(!blobs)blobs=await pdfToPageBlobs(f,cb);
+      draft.questions=blobs.map((b,i)=>{const id=uid();pending.set(id,b);return{id,no:i+1,subject:'',section:'',chapter:'',type:'mcq',answer:''};});
+      applyPattern(draft.questions,pattern);
+      if(meta)draft.questions.forEach((q,i)=>{const m=meta[i];if(!m)return;if(m.subject)q.subject=m.subject;q.section=m.section||'';q.type=m.type||q.type;q.answer=m.answer||'';});
+      if(!$('#bName').value)$('#bName').value=f.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
+      const subj={};draft.questions.forEach(q=>{subj[q.subject||'—']=(subj[q.subject||'—']||0)+1;});
+      const parts=Object.entries(subj).map(([k,v])=>k+' '+v).join(' · ');
+      if(meta){const got=draft.questions.filter(q=>q.answer).length;
+        $('#bStat').textContent=`${blobs.length} questions found · ${parts} · answer key read for ${got}/${blobs.length}.`+(blobs.guessed?' Question types were guessed from the section names — please check them.':'')+(got<blobs.length?' Fill the missing answers below or use the key scanner.':'');}
+      else if(mode==='page')$('#bStat').textContent=`${blobs.length} pages imported as ${blobs.length} questions (one question per page) · ${parts}.`+(want&&want!==blobs.length?` Your pattern expects ${want} — adjust it and press Apply pattern if needed.`:'');
+      else $('#bStat').textContent=`Could not detect question numbers — imported ${blobs.length} pages. Use ✂ to split them.`;
+      drawKeys();toast('PDF imported');}
     catch(err){console.error(err);$('#bStat').textContent=/dynamically imported|Failed to fetch|load/i.test(err.message)?'The PDF reader could not be downloaded. Check your internet connection and try again.':'PDF error: '+err.message;}
     bar.style.display='none';};
   $('#bSave').onclick=async()=>{
@@ -979,7 +1136,7 @@ async function renderInstructions(testId){
           <div class="row"><span class="pmark p-a">3</span> You have answered the question.</div>
           <div class="row"><span class="pmark p-m">4</span> You have NOT answered, but marked for review.</div>
           <div class="row"><span class="pmark p-am">5</span> Answered and marked for review — it WILL be evaluated.</div></div>
-        <p style="margin:0 0 6px"><b>Marking scheme:</b> MCQ +${t.marks} / −${t.neg}, Numerical +${t.marks} / −${t.negNum??t.neg}, unattempted 0.</p>
+        <p style="margin:0 0 6px"><b>Marking scheme:</b> ${schemeText(t)}</p>
         <p style="margin:0 0 6px"><b>Navigating:</b> Click <i>Save &amp; Next</i> to save your answer and move on, or <i>Mark for Review &amp; Next</i> to flag it. Selecting an option and pressing <i>Clear Response</i> will deselect it.</p>
         <p style="margin:0 0 6px"><b>Sections:</b> ${secs.join(', ')} — Section A (MCQ) and Section B (numerical) where applicable. You may shuffle between sections and questions at any time.</p>
         <p class="hint" style="margin:10px 0 0">Keyboard: 1–4 select option · Enter = Save &amp; Next · ← → navigate · M = mark.</p>
@@ -1051,7 +1208,7 @@ async function renderExam(testId){
   $('#subTabs').onclick=e=>{const b=e.target.closest('[data-sub]');if(!b)return;
     const i=t.questions.findIndex(q=>q.subject===b.dataset.sub);if(i>=0)goQ(i);};
   $('#secTabs').onclick=e=>{const b=e.target.closest('[data-sec]');if(!b)return;
-    const c=cur(),i=t.questions.findIndex(q=>q.subject===c.subject&&q.type===b.dataset.sec);if(i>=0)goQ(i);};
+    const c=cur(),i=t.questions.findIndex(q=>q.subject===c.subject&&secOf(q)===b.dataset.sec);if(i>=0)goQ(i);};
   $('#pgrid').onclick=e=>{const b=e.target.closest('[data-i]');if(!b)return;
     goQ(+b.dataset.i);$('#side').classList.remove('open');$('#scrim').classList.remove('on');};
   $('#bSaveNext').onclick=()=>{buzz();goQ(at.current+1);};
@@ -1065,6 +1222,7 @@ async function renderExam(testId){
     if(state.view!=='exam')return;
     const k=e.key.toLowerCase();
     if(['1','2','3','4'].includes(e.key)&&cur().type==='mcq')choose('ABCD'[+e.key-1]);
+    else if(['1','2','3','4'].includes(e.key)&&cur().type==='multi')toggleMulti('ABCD'[+e.key-1]);
     else if(e.key==='Enter'||e.key==='ArrowRight')goQ(at.current+1);
     else if(e.key==='ArrowLeft')goQ(at.current-1);
     else if(k==='m'){at.marked[cur().id]=true;paintPalette();save();}};
@@ -1075,27 +1233,29 @@ async function renderExam(testId){
 
   function save(){clearTimeout(saveT);saveT=setTimeout(()=>DB.put('attempts',at),300);}
   function bump(){const n=Date.now();if(lastTick){const q=cur();at.timeSpent[q.id]=(at.timeSpent[q.id]||0)+(n-lastTick)/1000;}lastTick=n;}
-  function goQ(i){if(i<0||i>=t.questions.length)return toast(i<0?'Pehla question':'Aakhri question');
+  function goQ(i){if(i<0||i>=t.questions.length)return toast(i<0?'This is the first question':'This is the last question');
     bump();at.current=i;at.visited[t.questions[i].id]=true;
     paintTabs();paintQ();paintPalette();save();$('#qbody').scrollTo({top:0});}
   function choose(o){at.answers[cur().id]=o;paintQ();paintPalette();save();buzz();}
+  function setAns(q,v){v?at.answers[q.id]=v:delete at.answers[q.id];paintQ();paintPalette();save();buzz();}
+  function toggleMulti(o){const q=cur(),st=new Set(letterSet(at.answers[q.id]));st.has(o)?st.delete(o):st.add(o);setAns(q,[...st].sort().join(','));}
+  function toggleMx(q,r,c){const o=parseMatrix(at.answers[q.id]),st=new Set((o[r]||'').split('').filter(Boolean));st.has(c)?st.delete(c):st.add(c);o[r]=[...st].sort().join('');setAns(q,fmtMatrix(o));}
   async function paintQ(){
     const q=cur(),url=await imgUrl(t.id,q.id);
-    const negV=q.type==='mcq'?t.neg:(t.negNum??t.neg);
+    const negV=negOf(q,t);
     $('#qhead').innerHTML=`<b>Question No. ${q.no}</b>
       <span class="hint">${esc(q.subject)}</span>
-      <span class="hint">Question Type: ${q.type==='mcq'?'MCQ':'Numerical'}</span>
+      <span class="hint">${esc(secOf(q))}</span>
+      <span class="hint">Question Type: ${TYL[q.type]||q.type}</span>
       <div class="nta-mk"><span class="pos">Marks +${t.marks}</span><span class="neg">Negative −${negV}</span>
       <span id="qTime" class="hint">${mmss(at.timeSpent[q.id]||0)}</span></div>`;
     $('#qbody').innerHTML=`
       <div class="nta-img"><img id="qimg" src="${url}" alt="Question ${q.no}"></div>
-      ${q.type==='mcq'?`<div class="nta-opts">${['A','B','C','D'].map((o,i)=>`
-        <button class="nta-opt ${at.answers[q.id]===o?'on':''}" data-opt="${o}">
-          <span class="nta-radio"></span><span>(${i+1})&nbsp; Option ${o}</span></button>`).join('')}</div>`
-      :`<div class="nta-num" style="margin-top:14px"><div class="nta-numdisp" id="numDisp">${esc(at.answers[q.id]||'')}</div>
-        <div class="nta-keys">${['1','2','3','4','5','6','7','8','9','0','.','-','⌫','Clr'].map(k=>`<button data-k="${k}">${k}</button>`).join('')}</div></div>`}`;
+      ${(window.__curAnswers=at.answers,answerUI(q))}`;
 
     $$('#qbody [data-opt]').forEach(b=>b.onclick=()=>choose(b.dataset.opt));
+    $$('#qbody [data-mopt]').forEach(b=>b.onclick=()=>toggleMulti(b.dataset.mopt));
+    $$('#qbody [data-mx]').forEach(b=>b.onclick=()=>toggleMx(q,b.dataset.mx[0],b.dataset.mx[1]));
 
     $$('#qbody [data-k]').forEach(b=>b.onclick=()=>{
       let v=at.answers[q.id]||'';const k=b.dataset.k;
@@ -1108,9 +1268,8 @@ async function renderExam(testId){
     const q=cur();
 
     $$('#subTabs [data-sub]').forEach(b=>b.classList.toggle('on',b.dataset.sub===q.subject));
-    const types=[...new Set(t.questions.filter(x=>x.subject===q.subject).map(x=>x.type))];
-    $('#secTabs').innerHTML=types.map(ty=>`<button class="nta-sec ${ty===q.type?'on':''}" data-sec="${ty}">
-      ${ty==='mcq'?'SECTION A':'SECTION B'}</button>`).join('');
+    const secs=[...new Set(t.questions.filter(x=>x.subject===q.subject).map(secOf))];
+    $('#secTabs').innerHTML=secs.map(sc=>`<button class="nta-sec ${sc===secOf(q)?'on':''}" data-sec="${esc(sc)}">${esc(sc)}</button>`).join('');
     $('#palTitle').textContent=`${q.subject} — Choose a Question`;}
   function paintPalette(){
     const q=cur(),list=t.questions.map((x,i)=>({x,i})).filter(o=>o.x.subject===q.subject);
@@ -1132,7 +1291,7 @@ async function renderExam(testId){
     m.innerHTML=`<div class="box" style="max-width:720px"><h2>${esc(t.name)} — Question Paper</h2>
       <div class="tblwrap"><table><thead><tr><th>Q</th><th>Subject</th><th>Section</th><th>Status</th><th>Time</th></tr></thead>
       <tbody>${t.questions.map(q=>{const an=at.answers[q.id]!=null,mk=!!at.marked[q.id],vi=!!at.visited[q.id];
-        return `<tr><td>${q.no}</td><td>${esc(q.subject)}</td><td>${q.type==='mcq'?'A':'B'}</td>
+        return `<tr><td>${q.no}</td><td>${esc(q.subject)}</td><td>${esc(secOf(q))}</td>
         <td>${an&&mk?'Answered & marked':mk?'Marked':an?'Answered':vi?'Not answered':'Not visited'}</td>
         <td>${mmss(at.timeSpent[q.id]||0)}</td></tr>`;}).join('')}</tbody></table></div>
       <div class="row" style="margin-top:12px"><button class="btn primary" id="smOk">Close</button></div></div>`;
@@ -1156,7 +1315,7 @@ async function renderExam(testId){
     bump();clearInterval(timerId);document.onkeydown=null;document.onvisibilitychange=null;
     const res=grade(t,at);
     const rec={id:uid(),testId:t.id,testName:t.name,paperType:t.paperType||'J(M)',mode:'CBT',
-      startedAt:at.startedAt,submittedAt:Date.now(),durationMin:t.durationMin,marks:t.marks,neg:t.neg,negNum:t.negNum??t.neg,
+      startedAt:at.startedAt,submittedAt:Date.now(),durationMin:t.durationMin,marks:t.marks,neg:t.neg,negNum:t.negNum??t.neg,negMulti:t.negMulti??2,
       answers:at.answers,marked:at.marked,visited:at.visited,timeSpent:at.timeSpent,result:res,
       qmeta:t.questions.map(q=>({id:q.id,no:q.no,subject:q.subject,chapter:q.chapter||'',type:q.type,answer:q.answer}))};
     await DB.put('history',rec);await DB.del('attempts',t.id);
@@ -1169,16 +1328,14 @@ async function renderExam(testId){
 function instrModal(t){
   const m=document.createElement('div');m.className='modal';
   m.innerHTML=`<div class="box"><h2>Instructions</h2>
-    <p style="margin:0 0 8px">MCQ: +${t.marks} / −${t.neg}. Numerical: +${t.marks} / −${t.negNum??t.neg}. Unattempted 0.</p>
+    <p style="margin:0 0 8px">${schemeText(t)}</p>
     <p style="margin:0 0 8px">Marked-for-review questions that also carry an answer <b>will be evaluated</b>.</p>
     <p class="hint">Keyboard: 1–4 option · Enter Save &amp; Next · ← → navigate · M mark.</p>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="iOk">Close</button></div></div>`;
   document.body.appendChild(m);$('#iOk',m).onclick=()=>m.remove();}
 /* ============ grading ============ */
 const near=(a,b)=>Math.abs(parseFloat(a)-parseFloat(b))<=0.01;
-function isCorrect(q,g){if(g==null||g==='')return false;
-  if(q.type==='mcq')return String(g).toUpperCase()===String(q.answer||'').toUpperCase();
-  return q.answer!==''&&!isNaN(parseFloat(q.answer))&&!isNaN(parseFloat(g))&&near(g,q.answer);}
+function isCorrect(q,g){return scoreQ(q,g,{marks:1,neg:0,negNum:0,negMulti:0}).st==='correct';}
 function grade(t,at){
   const per={},perCh={},records=[];
   const ts=t.questions.map(q=>at.timeSpent[q.id]||0).filter(x=>x>2).sort((a,b)=>a-b);
@@ -1186,18 +1343,17 @@ function grade(t,at){
   let score=0,correct=0,wrong=0,skipped=0;
   t.questions.forEach(q=>{
     const g=at.answers[q.id],tm=at.timeSpent[q.id]||0,ch=(q.chapter||'').trim()||'Unspecified';
-    const negV=q.type==='mcq'?t.neg:(t.negNum??t.neg);
-    const st=(g==null||g==='')?'skipped':isCorrect(q,g)?'correct':'wrong';
-    const mk=st==='correct'?t.marks:st==='wrong'?-negV:0;score+=mk;
+    const negV=negOf(q,t);
+    const sc=scoreQ(q,g,t),st=sc.st,mk=sc.mk;score+=mk;
     if(st==='correct')correct++;else if(st==='wrong')wrong++;else skipped++;
     const slow=tm>Math.max(100,med*2),fast=tm<Math.max(20,med*0.45);
     const tag=st==='skipped'?(tm>25?'Attempted & left':'Not attempted')
-      :st==='correct'?(slow?'Overtime correct':'Perfect attempt'):(fast?'Careless / guess':'Concept gap');
+      :st==='correct'?(sc.partial?'Partial credit':slow?'Overtime correct':'Perfect attempt'):(fast?'Careless / guess':'Concept gap');
     const put=o=>{o.total++;o.time+=tm;o.score+=mk;o[st]++;o.max+=t.marks;};
     per[q.subject]??={score:0,max:0,correct:0,wrong:0,skipped:0,total:0,time:0};put(per[q.subject]);
     const ck=q.subject+' ▸ '+ch;
     perCh[ck]??={subject:q.subject,chapter:ch,score:0,max:0,correct:0,wrong:0,skipped:0,total:0,time:0};put(perCh[ck]);
-    records.push({no:q.no,subject:q.subject,chapter:ch,type:q.type,status:st,time:tm,marks:mk,tag,given:g??'',answer:q.answer});});
+    records.push({no:q.no,subject:q.subject,chapter:ch,type:q.type,status:st,time:tm,marks:mk,tag,partial:!!sc.partial,given:g??'',answer:q.answer});});
   const attempted=correct+wrong;const tags={};records.forEach(r=>tags[r.tag]=(tags[r.tag]||0)+1);
   return{score,total:t.questions.length*t.marks,correct,wrong,skipped,attempted,
     accuracy:attempted?Math.round(correct/attempted*100):0,
@@ -1289,7 +1445,7 @@ async function renderReview(hid,index){
   const h=await DB.get('history',hid);if(!h)return go('home');
   const t=await DB.get('tests',h.testId);
   const qs=h.qmeta;let i=index,filter='all';
-  const stOf=q=>{const g=h.answers[q.id];return(g==null||g==='')?'skipped':isCorrect(q,g)?'correct':'wrong';};
+  const stOf=q=>scoreQ(q,h.answers[q.id],h).st;
   const visible=()=>qs.filter(q=>filter==='all'?1:filter==='marked'?h.marked[q.id]:stOf(q)===filter);
   shell(`
     <div class="row" style="flex-wrap:wrap;gap:8px;margin-bottom:12px" id="filters">
@@ -1307,12 +1463,12 @@ async function renderReview(hid,index){
     const col=st==='correct'?'var(--green)':st==='wrong'?'var(--red)':'var(--muted)';
     $('#revCard').innerHTML=`
       <div class="row" style="margin-bottom:10px"><div><b>Question ${q.no}</b>
-        <div class="hint">${esc(q.subject)} · ${q.type==='mcq'?'MCQ':'Numerical'} · ${mmss(h.timeSpent[q.id]||0)}</div></div>
-        <div class="spacer"></div><span class="chip" style="background:color-mix(in srgb,${col} 16%,transparent);color:${col}">${st}</span></div>
+        <div class="hint">${esc(q.subject)} · ${esc(secOf(q))} · ${TYL[q.type]||q.type} · ${mmss(h.timeSpent[q.id]||0)}</div></div>
+        <div class="spacer"></div><span class="chip" style="background:color-mix(in srgb,${col} 16%,transparent);color:${col}">${scoreQ(q,g,h).partial?'partial credit':st}</span></div>
       ${url?`<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff"><img src="${url}" style="width:100%;display:block"></div>`
         :'<div class="hint">Question image unavailable (test deleted).</div>'}
-      ${q.type==='mcq'?`<div style="display:grid;gap:8px;margin-top:12px">${['A','B','C','D'].map(o=>{
-        const ok=String(q.answer).toUpperCase()===o,mine=g===o;
+      ${(q.type==='mcq'||q.type==='multi')?`<div style="display:grid;gap:8px;margin-top:12px">${['A','B','C','D'].map(o=>{
+        const CS=new Set(q.type==='multi'?letterSet(q.answer):[String(q.answer).toUpperCase()]),GS=new Set(q.type==='multi'?letterSet(g):[String(g||'').toUpperCase()]),ok=CS.has(o),mine=GS.has(o);
         return `<div style="padding:11px 13px;border:1.5px solid ${ok?'var(--green)':mine?'var(--red)':'var(--line)'};border-radius:11px;
           background:${ok?'color-mix(in srgb,var(--green) 10%,transparent)':mine?'color-mix(in srgb,var(--red) 10%,transparent)':'transparent'};font-weight:600">
           ${o}${ok?' · correct answer':''}${mine?' · your answer':''}</div>`;}).join('')}</div>`
@@ -1463,7 +1619,7 @@ function singleReportHTML(h){
     k==='Attempted & left'?'Time spent but no answer marked':'Question never worked on'}</td></tr>`).join('')}</table>
   <h2>Question-wise log</h2>
   <table><tr><th>Q</th><th>Subject</th><th>Type</th><th>Your</th><th>Key</th><th>Status</th><th>Marks</th><th>Time</th></tr>
-  ${r.records.map(x=>`<tr><td>${x.no}</td><td>${esc(x.subject)}</td><td>${x.type==='mcq'?'MCQ':'Num'}</td>
+  ${r.records.map(x=>`<tr><td>${x.no}</td><td>${esc(x.subject)}</td><td>${TY[x.type]||x.type}</td>
     <td>${esc(x.given||'—')}</td><td>${esc(x.answer||'—')}</td><td>${x.status}</td><td>${x.marks>0?'+':''}${x.marks}</td>
     <td>${mmss(x.time)}</td></tr>`).join('')}</table>
   <div class="foot"><span>${esc(PROF().institute)} · Computer-Based Test Series</span><span>Report generated by Testify CBT</span></div>
@@ -2019,6 +2175,11 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 
 <style id="tf-lux">
+.nta-radio.sq{border-radius:5px!important}
+.nta-mx{margin-top:14px;display:inline-grid;gap:8px;padding:14px 18px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.nta-mx .mxh,.nta-mx .mxr{display:grid;grid-template-columns:34px repeat(5,44px);gap:8px;align-items:center;justify-items:center;font-weight:700}
+.nta-mx .mxc{width:30px;height:30px;border-radius:50%;border:2px solid #9aa5b8;background:#fff;cursor:pointer;padding:0}
+.nta-mx .mxc.on{background:#1c2b4a;border-color:#1c2b4a;box-shadow:inset 0 0 0 5px #fff}
 .logo,.brand,#logo,.app-logo{cursor:pointer}
 h1{color:var(--text)}
 .tcard .row{flex-wrap:nowrap;gap:8px}.tcard .row .btn.sm{flex:0 0 auto;padding:8px 14px}
